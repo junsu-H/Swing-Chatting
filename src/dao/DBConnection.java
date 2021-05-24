@@ -8,7 +8,7 @@ import java.sql.ResultSet;
 public class DBConnection {
     public static Connection getConnection() {
         Connection conn=null;
-        String url="jdbc:mysql://localhost/accounts?useSSL=false&characterEncoding=UTF-8&serverTimezone=UTC";
+        String url="jdbc:mysql://localhost/chatting?useSSL=false&characterEncoding=UTF-8&serverTimezone=UTC";
         String id="root";
         String pw="root";
         String driver="com.mysql.cj.jdbc.Driver";
@@ -23,8 +23,8 @@ public class DBConnection {
         }
         return conn;
     }
-    public static void close(Connection c, PreparedStatement p,
-                             ResultSet r) {
+
+    public static void close(Connection c, PreparedStatement p, ResultSet r) {
         try {
             if(r!=null)r.close();
             if(p!=null)p.close();
@@ -32,6 +32,7 @@ public class DBConnection {
             System.out.println("DB Close");
         }catch(Exception e) {}
     }
+
     public static void close(Connection c, PreparedStatement p) {
         try {
             if(p!=null)p.close();
