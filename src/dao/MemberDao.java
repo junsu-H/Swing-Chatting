@@ -1,12 +1,17 @@
 package dao;
 
+import models.Member;
+import util.AESUtil;
+
+import javax.crypto.*;
+import java.security.InvalidAlgorithmParameterException;
+import java.security.InvalidKeyException;
 import java.security.NoSuchAlgorithmException;
 import java.security.SecureRandom;
-import java.sql.*;
-import models.Member;
-
-import javax.crypto.KeyGenerator;
-import javax.crypto.SecretKey;
+import java.sql.Connection;
+import java.sql.PreparedStatement;
+import java.sql.ResultSet;
+import java.sql.SQLException;
 
 public class MemberDao {
     private static MemberDao instance=new MemberDao();
@@ -22,6 +27,34 @@ public class MemberDao {
 
     /* SQL Query 결과 객체 */
     private ResultSet rs;
+
+    /* Success 1, Fail -1 */
+    public String findByPassword(String nickname) {
+        String selectSql = "select password from member where nickname = ?;";
+        try {
+            /* DB connect */
+            conn = DBConnection.getConnection();
+
+            /* query conn */
+            pstmt = conn.prepareStatement(selectSql);
+
+            /* selectSql ?에 들어갈 data setting */
+            pstmt.setString(1, nickname);
+
+            /* selectSql Query 리턴값 받아오기 */
+            rs = pstmt.executeQuery();
+
+            /* select가 되면 ID가 있으므로 1 반환*/
+            if(rs.next()) {
+                return rs.getString(1);
+            }
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
+
+        /* login fail */
+        return selectSql;
+    }
 
     /* Success 1, Fail -1 */
     public int findByUsernameAndPassword(String nickname, String password) {
@@ -55,17 +88,40 @@ public class MemberDao {
     /* Success 1, Fail -1 */
     public int save(Member member){
         String insertSql = "insert into member(nickname, password) values(?,?);";
+
         try {
             conn = DBConnection.getConnection();
             pstmt = conn.prepareStatement(insertSql);
             pstmt.setString(1, member.getNickname());
 
+            KeyGenerator keyGenerator = KeyGenerator.getInstance("AES");
+            SecureRandom secureRandom = new SecureRandom();
+            keyGenerator.init(128, secureRandom);
+            SecretKey secretKey = keyGenerator.generateKey();
+            byte[] keyData = secretKey.getEncoded();
+
             // TODO: 암호화 처리
             String password = member.getPassword();
-            pstmt.setString(2, password);
+
+//            String encrypted = AES256.encrypt(password, "secretKey");
+//            System.out.println("AES-256 : enc - " + encrypted);
+            String encrypted = AESUtil.encrypt(password);
+            pstmt.setString(2, encrypted);
             pstmt.executeUpdate();
             return 1;
         } catch (SQLException e) {
+            e.printStackTrace();
+        } catch (NoSuchAlgorithmException e) {
+            e.printStackTrace();
+        } catch (NoSuchPaddingException e) {
+            e.printStackTrace();
+        } catch (IllegalBlockSizeException e) {
+            e.printStackTrace();
+        } catch (BadPaddingException e) {
+            e.printStackTrace();
+        } catch (InvalidKeyException e) {
+            e.printStackTrace();
+        }catch (InvalidAlgorithmParameterException e) {
             e.printStackTrace();
         }
         return -1;

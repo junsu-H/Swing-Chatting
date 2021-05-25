@@ -1,11 +1,19 @@
 package gui;
 
 import dao.MemberDao;
-import java.awt.EventQueue;
-import java.awt.event.ActionEvent;
-import java.awt.event.ActionListener;
+import util.AESUtil;
+
+import javax.crypto.BadPaddingException;
+import javax.crypto.IllegalBlockSizeException;
+import javax.crypto.NoSuchPaddingException;
 import javax.swing.*;
 import javax.swing.border.EmptyBorder;
+import java.awt.*;
+import java.awt.event.ActionEvent;
+import java.awt.event.ActionListener;
+import java.security.InvalidAlgorithmParameterException;
+import java.security.InvalidKeyException;
+import java.security.NoSuchAlgorithmException;
 
 public class LoginGui extends JFrame {
     private JPanel contentPane = null;
@@ -80,17 +88,37 @@ public class LoginGui extends JFrame {
     public void clickLoginBtn(){
         loginBtn.addActionListener(new ActionListener() {
             public void actionPerformed(ActionEvent e) {
-                String nickname = nicknameTextField.getText();
-                String password = pwTextField.getText();
-                MemberDao dao = MemberDao.getInstance();
-                int result = dao.findByUsernameAndPassword(nickname, password);
-                if(result == 1) {
-                    JOptionPane.showMessageDialog(null, "로그인 성공");
-                    new ChatClientGui();
-                }else {
-                    JOptionPane.showMessageDialog(null, "로그인 실패");
-                }
+                try {
+                    String nickname = nicknameTextField.getText();
+                    String password = pwTextField.getText();
 
+                    MemberDao dao = MemberDao.getInstance();
+                    String encryptedPassword = dao.findByPassword(nickname);
+                    String decryptedPassword = AESUtil.decrypt(encryptedPassword);
+                    int result = 0;
+                    if (password.equals(decryptedPassword)) {
+                        result = dao.findByUsernameAndPassword(nickname, encryptedPassword);
+                    }
+                    if (result == 1) {
+                        JOptionPane.showMessageDialog(null, "로그인 성공");
+                        new ChatClientGui();
+                    } else {
+                        JOptionPane.showMessageDialog(null, "로그인 실패");
+                    }
+
+                } catch (NoSuchPaddingException noSuchPaddingException) {
+                    noSuchPaddingException.printStackTrace();
+                } catch (NoSuchAlgorithmException noSuchAlgorithmException) {
+                    noSuchAlgorithmException.printStackTrace();
+                } catch (InvalidKeyException invalidKeyException) {
+                    invalidKeyException.printStackTrace();
+                } catch (IllegalBlockSizeException illegalBlockSizeException) {
+                    illegalBlockSizeException.printStackTrace();
+                } catch (BadPaddingException badPaddingException) {
+                    badPaddingException.printStackTrace();
+                } catch (InvalidAlgorithmParameterException invalidAlgorithmParameterException) {
+                    invalidAlgorithmParameterException.printStackTrace();
+                }
             }
         });
     }
