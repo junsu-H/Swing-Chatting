@@ -1,6 +1,5 @@
 package gui;
 
-import client.TestChatClient;
 import dao.MemberDao;
 import util.AESUtil;
 
@@ -99,11 +98,9 @@ public class LoginGui extends JFrame {
                     int result = 0;
                     if (password.equals(decryptedPassword)) {
                         result = dao.findByUsernameAndPassword(nickname, encryptedPassword);
-                        System.out.println("Test");
                     }
                     if (result == 1) {
                         JOptionPane.showMessageDialog(null, "로그인 성공");
-                        new TestChatClient().go();
                     } else {
                         JOptionPane.showMessageDialog(null, "로그인 실패");
                     }
@@ -120,6 +117,8 @@ public class LoginGui extends JFrame {
                     badPaddingException.printStackTrace();
                 } catch (InvalidAlgorithmParameterException invalidAlgorithmParameterException) {
                     invalidAlgorithmParameterException.printStackTrace();
+                } catch (Exception exception) {
+                    exception.printStackTrace();
                 }
             }
         });

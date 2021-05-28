@@ -148,6 +148,8 @@ public class MemberDao {
             e.printStackTrace();
         }catch (InvalidAlgorithmParameterException e) {
             e.printStackTrace();
+        } catch (Exception e) {
+            e.printStackTrace();
         }
         return -1;
     }
