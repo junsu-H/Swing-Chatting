@@ -1,5 +1,6 @@
 package gui;
 
+import client.TestChatClient;
 import dao.MemberDao;
 import util.AESUtil;
 
@@ -18,7 +19,7 @@ import java.security.NoSuchAlgorithmException;
 public class LoginGui extends JFrame {
     private JPanel contentPane = null;
     private JTextField nicknameTextField = null;
-    private JTextField pwTextField = null;
+    private JPasswordField pwTextField = null;
     private JButton loginBtn = null;
     private JButton registerBtn = null;
 
@@ -54,13 +55,13 @@ public class LoginGui extends JFrame {
         nicknameTextField.setColumns(10);
 
         /* PW JTextField */
-        pwTextField = new JTextField();
+        pwTextField = new JPasswordField();
         pwTextField.setColumns(10);
         pwTextField.setBounds(150, 100, 175, 35);
         contentPane.add(pwTextField);
     }
 
-    public void createLabel(){
+    public void createLabel() {
         /* nickname JLabel */
         JLabel nicknameLabel = new JLabel("NICKNAME");
         nicknameLabel.setBounds(50, 45, 60, 35);
@@ -72,7 +73,7 @@ public class LoginGui extends JFrame {
         contentPane.add(pwLabel);
     }
 
-    public void createButton(){
+    public void createButton() {
         /* LOGIN JButton */
         loginBtn = new JButton("LOGIN");
         loginBtn.setBounds(115, 155, 115, 35);
@@ -85,12 +86,12 @@ public class LoginGui extends JFrame {
     }
 
 
-    public void clickLoginBtn(){
+    public void clickLoginBtn() {
         loginBtn.addActionListener(new ActionListener() {
             public void actionPerformed(ActionEvent e) {
                 try {
                     String nickname = nicknameTextField.getText();
-                    String password = pwTextField.getText();
+                    String password = String.valueOf(pwTextField.getPassword());
 
                     MemberDao dao = MemberDao.getInstance();
                     String encryptedPassword = dao.findByPassword(nickname);
@@ -98,10 +99,11 @@ public class LoginGui extends JFrame {
                     int result = 0;
                     if (password.equals(decryptedPassword)) {
                         result = dao.findByUsernameAndPassword(nickname, encryptedPassword);
+                        System.out.println("Test");
                     }
                     if (result == 1) {
                         JOptionPane.showMessageDialog(null, "로그인 성공");
-                        new ChatClientGui();
+                        new TestChatClient().go();
                     } else {
                         JOptionPane.showMessageDialog(null, "로그인 실패");
                     }
@@ -123,7 +125,7 @@ public class LoginGui extends JFrame {
         });
     }
 
-    public void clickRegisterBtn(){
+    public void clickRegisterBtn() {
         registerBtn.addActionListener(new ActionListener() {
             public void actionPerformed(ActionEvent e) {
                 new RegisterGui();

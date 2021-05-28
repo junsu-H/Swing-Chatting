@@ -4,11 +4,36 @@ import javax.swing.*;
 import java.awt.*;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
+import java.io.*;
+import java.net.InetAddress;
+import java.net.Socket;
+import java.net.UnknownHostException;
 
 public class ChatClientGui extends JFrame {
-    JTextField inputTextField;
-    JButton sendBtn;
-    JTextArea chatTextArea;
+    public static JTextField inputTextField;
+    static JButton sendBtn;
+    public static JTextArea chatTextArea;
+
+    static Socket socket;
+
+    private static int PORT = 9632;
+    private static String HOST;
+
+    static {
+        try {
+            HOST = InetAddress.getLocalHost().getHostAddress();
+        } catch (UnknownHostException e) {
+            e.printStackTrace();
+        }
+    }
+
+    static {
+        try {
+            socket = new Socket("localhost", PORT);
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+    }
 
     public ChatClientGui() {
         /* First Frame */
@@ -24,6 +49,7 @@ public class ChatClientGui extends JFrame {
         chatTextArea = new JTextArea(10, 10);
         JScrollPane chatScroll = new JScrollPane(chatTextArea);
         chatScroll.setBounds(10, 10, 900, 760);
+        chatTextArea.setEnabled(false);
         this.add(chatScroll);
 
         /* 좌측 하단 대화 입력창 */
@@ -44,8 +70,10 @@ public class ChatClientGui extends JFrame {
 
         setVisible(true);
 
+        new Thread(new ClientThread()).start();
         clickSendBtn();
         enterInputTextField();
+
     }
 
     /* 우측 상단 유저 목록 */
@@ -60,24 +88,77 @@ public class ChatClientGui extends JFrame {
         return userListTextPane;
     }
 
-    public void clickSendBtn() {
+    public static void clickSendBtn() {
         sendBtn.addActionListener(new ActionListener() {
             @Override
             public void actionPerformed(ActionEvent e) {
-                System.out.println(inputTextField.getText());
-                chatTextArea.append(inputTextField.getText() + "\n");
+                if (inputTextField.getText().trim().length() > 0) {
+                    sendMessage(inputTextField.getText().trim());
+                    inputTextField.setText(null);
+                }
             }
         });
     }
-    public void enterInputTextField() {
+
+
+    public static void enterInputTextField() {
         inputTextField.addActionListener(new ActionListener() {
             public void actionPerformed(ActionEvent e) {
-                JTextField t = (JTextField) e.getSource();
-                chatTextArea.append(t.getText() + "\n");
-                t.setText("");
+                if (inputTextField.getText().trim().length() > 0) {
+                    sendMessage(inputTextField.getText().trim());
+                    inputTextField.setText(null);
+                }
             }
         });
     }
+
+    public static class ClientThread implements Runnable {
+        @Override
+        public void run() {
+            BufferedReader bufferedReader = null;
+
+            try {
+                bufferedReader = new BufferedReader(new InputStreamReader(socket.getInputStream()));
+                while (true) {
+                    // Message from client
+                    String clientMessage = bufferedReader.readLine();
+
+                    if (clientMessage != null && clientMessage.trim().length() > 0) {
+                        chatTextArea.append(clientMessage + "\n");
+                        chatTextArea.setCaretPosition(chatTextArea.getText().length());
+                    }
+                }
+            } catch (Exception e) {
+                System.out.println(e + " => client run");
+                e.printStackTrace();
+            } finally {
+                try {
+                    bufferedReader.close();
+                    System.out.println("Read Fin");
+                    chatTextArea.append("\n**Read Fin**\n");
+                } catch (IOException e) {
+                    System.out.println(e);
+                }
+            }
+        }
+
+    }
+
+    public static void sendMessage(String message) {
+        try {
+            // 클라이언트에게 보내기 위한 준비
+            BufferedWriter bufferedWriter = new BufferedWriter(new OutputStreamWriter(socket.getOutputStream()));
+
+            bufferedWriter.write(message);
+            bufferedWriter.newLine();
+            bufferedWriter.flush();
+
+        } catch (Exception sendError) {
+            System.out.println("메시지 전송 에러 : " + sendError);
+        }
+
+    }
+
 
     public static void main(String[] args) {
         new ChatClientGui();

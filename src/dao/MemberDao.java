@@ -29,6 +29,35 @@ public class MemberDao {
     private ResultSet rs;
 
     /* Success 1, Fail -1 */
+    public String findByNickname(String nickname) {
+        String selectSql = "select nickname from member where nickname = ?;";
+        try {
+            /* DB connect */
+            conn = DBConnection.getConnection();
+
+            /* query conn */
+            pstmt = conn.prepareStatement(selectSql);
+
+            /* selectSql ?에 들어갈 data setting */
+            pstmt.setString(1, nickname);
+
+            /* selectSql Query 리턴값 받아오기 */
+            rs = pstmt.executeQuery();
+
+            /* select가 되면 ID가 있으므로 1 반환*/
+            if(rs.next()) {
+                return rs.getString(1);
+            }
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
+
+        /* login fail */
+        return selectSql;
+    }
+
+
+    /* Success 1, Fail -1 */
     public String findByPassword(String nickname) {
         String selectSql = "select password from member where nickname = ?;";
         try {
@@ -100,11 +129,7 @@ public class MemberDao {
             SecretKey secretKey = keyGenerator.generateKey();
             byte[] keyData = secretKey.getEncoded();
 
-            // TODO: 암호화 처리
             String password = member.getPassword();
-
-//            String encrypted = AES256.encrypt(password, "secretKey");
-//            System.out.println("AES-256 : enc - " + encrypted);
             String encrypted = AESUtil.encrypt(password);
             pstmt.setString(2, encrypted);
             pstmt.executeUpdate();

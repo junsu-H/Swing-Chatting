@@ -1,26 +1,19 @@
 package gui;
 
-import java.awt.EventQueue;
-import java.awt.Font;
-import java.awt.event.ActionEvent;
-import java.awt.event.ActionListener;
-
-import javax.swing.JButton;
-import javax.swing.JFrame;
-import javax.swing.JLabel;
-import javax.swing.JOptionPane;
-import javax.swing.JPanel;
-import javax.swing.JTextField;
-import javax.swing.border.EmptyBorder;
-
 import dao.MemberDao;
 import models.Member;
+
+import javax.swing.*;
+import javax.swing.border.EmptyBorder;
+import java.awt.*;
+import java.awt.event.ActionEvent;
+import java.awt.event.ActionListener;
 
 public class RegisterGui extends JFrame {
     JPanel contentPane = null;
     JTextField nicknameTextField = null;
-    JTextField pwTextField = null;
-    JTextField pwCheckTextField = null;
+    JPasswordField pwTextField = null;
+    JPasswordField pwCheckTextField = null;
     JButton registerCompleteBtn = null;
 
     public RegisterGui() {
@@ -52,14 +45,14 @@ public class RegisterGui extends JFrame {
         nicknameTextField.setBounds(160, 140, 185, 35);
         contentPane.add(nicknameTextField);
 
-        /* PW JTextField */
-        pwTextField = new JTextField();
+        /* PW JPasswordField */
+        pwTextField = new JPasswordField();
         pwTextField.setColumns(10);
         pwTextField.setBounds(160, 220, 185,35);
         contentPane.add(pwTextField);
 
-        /* PW CHECK JTextField */
-        pwCheckTextField = new JTextField();
+        /* PW CHECK JPasswordField */
+        pwCheckTextField = new JPasswordField();
         pwCheckTextField.setColumns(10);
         pwCheckTextField.setBounds(160, 300, 185,35);
         contentPane.add(pwCheckTextField);
