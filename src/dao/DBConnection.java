@@ -10,7 +10,6 @@ public class DBConnection {
 
     public static Connection getConnection() {
         Connection conn = null;
-
         try {
             Class.forName(driver);
             conn = DriverManager.getConnection(url, id, pw);
@@ -40,9 +39,5 @@ public class DBConnection {
         } catch (Exception e) {
         }
     }
-
-//    public static void main(String[] args) {
-//        getConnection();
-//    }
 
 }

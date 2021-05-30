@@ -1,15 +1,12 @@
 package client;
 
-import javax.swing.*;
 import java.io.*;
 import java.net.InetAddress;
 import java.net.Socket;
 
-//import static gui.ChatClientGui.chatTextArea;
+import static gui.ChatClientGui.chatTextArea;
 
 public class ChatClient {
-    public static JTextArea chatTextArea;
-
     static Socket socket;
 
     private static int PORT = 9625;

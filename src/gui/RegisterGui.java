@@ -86,7 +86,7 @@ public class RegisterGui extends JFrame {
             public void actionPerformed(ActionEvent e) {
                 Member member = new Member(nicknameTextField.getText(), pwTextField.getText());
 
-                MemberDao dao = MemberDao.getMemberDao();
+                MemberDao dao = MemberDao.getInstance();
                 int save = 0;
                 int checkNickname = dao.checkNickname(member);
 

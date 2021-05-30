@@ -1,6 +1,7 @@
 package gui;
 
 import dao.MemberDao;
+import models.Member;
 import util.AESUtil;
 
 import javax.crypto.BadPaddingException;
@@ -10,10 +11,15 @@ import javax.swing.*;
 import javax.swing.border.EmptyBorder;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
+import java.awt.event.WindowAdapter;
+import java.awt.event.WindowEvent;
 import java.io.UnsupportedEncodingException;
+import java.net.Socket;
 import java.security.InvalidAlgorithmParameterException;
 import java.security.InvalidKeyException;
 import java.security.NoSuchAlgorithmException;
+
+import static gui.ChatClientGui.sendMessage;
 
 public class LoginGui extends JFrame {
     private JPanel contentPane = null;
@@ -41,7 +47,7 @@ public class LoginGui extends JFrame {
 
         setVisible(true);
 
-        clickLoginBtn();
+        clickLoginBtn(new Member(nicknameTextField.getText(), pwTextField.getText()));
         clickRegisterBtn();
 
     }
@@ -84,27 +90,27 @@ public class LoginGui extends JFrame {
         contentPane.add(registerBtn);
     }
 
-    public String getNickname(){
-        return nicknameTextField.getText();
-    }
 
-    public void clickLoginBtn() {
+    public void clickLoginBtn(Member member) {
         loginBtn.addActionListener(new ActionListener() {
             public void actionPerformed(ActionEvent e) {
                 try {
-                    String nickname = nicknameTextField.getText();
-                    String password = String.valueOf(pwTextField.getPassword());
+                    MemberDao dao = MemberDao.getInstance();
+                    member.setNickname(nicknameTextField.getText());
+                    member.setPassword(String.valueOf(pwTextField.getPassword()));
 
-                    MemberDao dao = MemberDao.getMemberDao();
-                    String encryptedPassword = dao.findByPassword(nickname);
+                    String encryptedPassword = dao.findByPassword(member);
+                    System.out.println(encryptedPassword);
+
                     String decryptedPassword = AESUtil.decrypt(encryptedPassword);
-                    int result = 0;
-                    if (password.equals(decryptedPassword)) {
-                        result = dao.findByNicknameAndPassword(nickname, encryptedPassword);
-                    }
-                    if (result == 1) {
+
+                    System.out.println("member.getPassword: " + member.getPassword());
+                    System.out.println("decry: " + decryptedPassword);
+
+
+                    if (member.getPassword().equals(decryptedPassword)) {
                         JOptionPane.showMessageDialog(null, "로그인 성공");
-                        new ChatClientGui(nickname);
+                        new ChatClientGui(member);
                     } else {
                         JOptionPane.showMessageDialog(null, "가입된 정보와 다릅니다.");
                     }

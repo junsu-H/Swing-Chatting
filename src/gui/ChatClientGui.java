@@ -1,9 +1,13 @@
 package gui;
 
+import models.Member;
+
 import javax.swing.*;
 import java.awt.*;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
+import java.awt.event.KeyAdapter;
+import java.awt.event.KeyEvent;
 import java.io.*;
 import java.net.InetAddress;
 import java.net.Socket;
@@ -35,9 +39,14 @@ public class ChatClientGui extends JFrame {
         }
     }
 
-    public ChatClientGui(String nickname) {
+    private String getNicknameFromMember(Member member) {
+        String nickname = member.getNickname();
+        return nickname;
+    }
+
+    public ChatClientGui(Member member) {
         /* First Frame */
-        super("nickname Chatting");
+        super("Client Chatting");
         Font font = new Font("바탕", Font.PLAIN, 15);
         setFont(font);
         setLayout(null);
@@ -50,7 +59,6 @@ public class ChatClientGui extends JFrame {
         JScrollPane chatScroll = new JScrollPane(chatTextArea);
         chatScroll.setBounds(10, 10, 900, 760);
         chatTextArea.setEnabled(false);
-        chatTextArea.append(nickname + "이(가) 입장하였습니다.\n");
         this.add(chatScroll);
 
         /* 좌측 하단 대화 입력창 */
@@ -71,6 +79,7 @@ public class ChatClientGui extends JFrame {
 
         setVisible(true);
 
+
 //        new Thread(new ClientThread()).start();
 
         new Thread() {
@@ -87,7 +96,7 @@ public class ChatClientGui extends JFrame {
                         String clientMessage = bufferedReader.readLine();
 
                         if (clientMessage != null && clientMessage.trim().length() > 0) {
-                            chatTextArea.append(nickname + ": " + clientMessage + "\n");
+                            chatTextArea.append(clientMessage + "\n");
                             chatTextArea.setCaretPosition(chatTextArea.getText().length());
                         }
                     }
@@ -105,9 +114,34 @@ public class ChatClientGui extends JFrame {
                 }
             }
         }.start();
+        sendMessage(getNicknameFromMember(member) + "님이 입장하셨습니다.");
 
-        clickSendBtn();
-        enterInputTextField();
+        inputTextField.addKeyListener(new KeyAdapter() {
+
+            @Override
+            public void keyReleased(KeyEvent e) {
+                if (e.getKeyCode() == 10) {
+                    if (inputTextField.getText().trim().length() > 0) {
+                        sendMessage(getNicknameFromMember(member) + " : " + inputTextField.getText().trim());
+                        inputTextField.setText(null);
+                    }
+                }
+            }
+
+        });
+
+        sendBtn.addActionListener(new ActionListener() {
+            @Override
+            public void actionPerformed(ActionEvent e) {
+                if (inputTextField.getText().trim().length() > 0) {
+                    sendMessage(getNicknameFromMember(member) + " : " + inputTextField.getText().trim());
+                    inputTextField.setText(null);
+                }
+            }
+        });
+
+//        clickSendBtn();
+//        enterInputTextField();
 
     }
 
@@ -128,12 +162,13 @@ public class ChatClientGui extends JFrame {
             @Override
             public void actionPerformed(ActionEvent e) {
                 if (inputTextField.getText().trim().length() > 0) {
-                    sendMessage(inputTextField.getText().trim());
+//                    sendMessage(nameFunc(member) + " : " + inputTextField.getText().trim());
                     inputTextField.setText(null);
                 }
             }
         });
     }
+
 
     public static void enterInputTextField() {
         inputTextField.addActionListener(new ActionListener() {
@@ -161,4 +196,4 @@ public class ChatClientGui extends JFrame {
     }
 
 }
-//    }
+
