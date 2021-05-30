@@ -8,9 +8,9 @@ import javax.crypto.IllegalBlockSizeException;
 import javax.crypto.NoSuchPaddingException;
 import javax.swing.*;
 import javax.swing.border.EmptyBorder;
-import java.awt.*;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
+import java.io.UnsupportedEncodingException;
 import java.security.InvalidAlgorithmParameterException;
 import java.security.InvalidKeyException;
 import java.security.NoSuchAlgorithmException;
@@ -84,6 +84,9 @@ public class LoginGui extends JFrame {
         contentPane.add(registerBtn);
     }
 
+    public String getNickname(){
+        return nicknameTextField.getText();
+    }
 
     public void clickLoginBtn() {
         loginBtn.addActionListener(new ActionListener() {
@@ -92,33 +95,35 @@ public class LoginGui extends JFrame {
                     String nickname = nicknameTextField.getText();
                     String password = String.valueOf(pwTextField.getPassword());
 
-                    MemberDao dao = MemberDao.getInstance();
+                    MemberDao dao = MemberDao.getMemberDao();
                     String encryptedPassword = dao.findByPassword(nickname);
                     String decryptedPassword = AESUtil.decrypt(encryptedPassword);
                     int result = 0;
                     if (password.equals(decryptedPassword)) {
-                        result = dao.findByUsernameAndPassword(nickname, encryptedPassword);
+                        result = dao.findByNicknameAndPassword(nickname, encryptedPassword);
                     }
                     if (result == 1) {
                         JOptionPane.showMessageDialog(null, "로그인 성공");
+                        new ChatClientGui(nickname);
                     } else {
-                        JOptionPane.showMessageDialog(null, "로그인 실패");
+                        JOptionPane.showMessageDialog(null, "가입된 정보와 다릅니다.");
                     }
 
-                } catch (NoSuchPaddingException noSuchPaddingException) {
-                    noSuchPaddingException.printStackTrace();
-                } catch (NoSuchAlgorithmException noSuchAlgorithmException) {
-                    noSuchAlgorithmException.printStackTrace();
-                } catch (InvalidKeyException invalidKeyException) {
-                    invalidKeyException.printStackTrace();
-                } catch (IllegalBlockSizeException illegalBlockSizeException) {
-                    illegalBlockSizeException.printStackTrace();
-                } catch (BadPaddingException badPaddingException) {
-                    badPaddingException.printStackTrace();
                 } catch (InvalidAlgorithmParameterException invalidAlgorithmParameterException) {
                     invalidAlgorithmParameterException.printStackTrace();
-                } catch (Exception exception) {
-                    exception.printStackTrace();
+                } catch (NoSuchPaddingException noSuchPaddingException) {
+                    System.out.println("test1");
+                } catch (IllegalBlockSizeException illegalBlockSizeException) {
+                    System.out.println("test2");
+                    illegalBlockSizeException.printStackTrace();
+                } catch (UnsupportedEncodingException unsupportedEncodingException) {
+                    System.out.println("test3");
+                } catch (NoSuchAlgorithmException noSuchAlgorithmException) {
+                    System.out.println("test4");
+                } catch (BadPaddingException badPaddingException) {
+                    System.out.println("test5");
+                } catch (InvalidKeyException invalidKeyException) {
+                    System.out.println("test6");
                 }
             }
         });
@@ -134,15 +139,17 @@ public class LoginGui extends JFrame {
 
 
     public static void main(String[] args) {
-        EventQueue.invokeLater(new Runnable() {
-            public void run() {
-                try {
-                    new LoginGui();
-
-                } catch (Exception e) {
-                    e.printStackTrace();
-                }
-            }
-        });
+        new LoginGui();
     }
 }
+//        EventQueue.invokeLater(new Runnable() {
+//            public void run() {
+//                try {
+//                    new LoginGui();
+//
+//                } catch (Exception e) {
+//                    e.printStackTrace();
+//                }
+//            }
+//        });
+//    }

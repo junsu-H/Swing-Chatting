@@ -4,6 +4,7 @@ import models.Member;
 import util.AESUtil;
 
 import javax.crypto.*;
+import java.io.UnsupportedEncodingException;
 import java.security.InvalidAlgorithmParameterException;
 import java.security.InvalidKeyException;
 import java.security.NoSuchAlgorithmException;
@@ -13,14 +14,15 @@ import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 
+import static dao.DBConnection.close;
+
 public class MemberDao {
-    private static MemberDao instance=new MemberDao();
-    public static MemberDao getInstance() {
-        return instance;
+    public static MemberDao getMemberDao() {
+        return new MemberDao();
     }
 
     /* DB 연결 객체 */
-    private Connection conn;
+    private Connection conn = DBConnection.getConnection();
 
     /* SQL Query를 사용할 객체 */
     private PreparedStatement pstmt = null;
@@ -45,17 +47,18 @@ public class MemberDao {
             rs = pstmt.executeQuery();
 
             /* select가 되면 ID가 있으므로 1 반환*/
-            if(rs.next()) {
+            if (rs.next()) {
                 return rs.getString(1);
             }
         } catch (SQLException e) {
             e.printStackTrace();
+        } finally {
+            close(conn, pstmt, rs);
+            System.out.println("DB Connect Close");
         }
-
         /* login fail */
-        return selectSql;
+        return String.valueOf(-1);
     }
-
 
     /* Success 1, Fail -1 */
     public String findByPassword(String nickname) {
@@ -74,19 +77,21 @@ public class MemberDao {
             rs = pstmt.executeQuery();
 
             /* select가 되면 ID가 있으므로 1 반환*/
-            if(rs.next()) {
+            if (rs.next()) {
                 return rs.getString(1);
             }
         } catch (SQLException e) {
             e.printStackTrace();
+        } finally {
+            close(conn, pstmt, rs);
+            System.out.println("DB Connect Close");
         }
-
         /* login fail */
-        return selectSql;
+        return String.valueOf(-1);
     }
 
     /* Success 1, Fail -1 */
-    public int findByUsernameAndPassword(String nickname, String password) {
+    public int findByNicknameAndPassword(String nickname, String password) {
         String selectSql = "select * from member where nickname = ? and password = ?;";
         try {
             /* DB connect */
@@ -102,12 +107,15 @@ public class MemberDao {
             /* selectSql Query 리턴값 받아오기 */
             rs = pstmt.executeQuery();
 
-            /* select가 되면 ID가 있으므로 1 반환*/
-            if(rs.next()) { 
+            /* select가 되면 1 반환 */
+            if (rs.next()) {
                 return 1;
             }
         } catch (SQLException e) {
             e.printStackTrace();
+        } finally {
+            close(conn, pstmt, rs);
+            System.out.println("DB Connect Close");
         }
 
         /* login fail */
@@ -115,7 +123,7 @@ public class MemberDao {
     }
 
     /* Success 1, Fail -1 */
-    public int save(Member member){
+    public int save(Member member) {
         String insertSql = "insert into member(nickname, password) values(?,?);";
 
         try {
@@ -126,30 +134,31 @@ public class MemberDao {
             KeyGenerator keyGenerator = KeyGenerator.getInstance("AES");
             SecureRandom secureRandom = new SecureRandom();
             keyGenerator.init(128, secureRandom);
-            SecretKey secretKey = keyGenerator.generateKey();
-            byte[] keyData = secretKey.getEncoded();
 
             String password = member.getPassword();
             String encrypted = AESUtil.encrypt(password);
             pstmt.setString(2, encrypted);
             pstmt.executeUpdate();
             return 1;
-        } catch (SQLException e) {
+        } catch (InvalidAlgorithmParameterException e) {
             e.printStackTrace();
-        } catch (NoSuchAlgorithmException e) {
-            e.printStackTrace();
+        } catch (SQLException throwables) {
+            throwables.printStackTrace();
         } catch (NoSuchPaddingException e) {
             e.printStackTrace();
         } catch (IllegalBlockSizeException e) {
+            e.printStackTrace();
+        } catch (UnsupportedEncodingException e) {
+            e.printStackTrace();
+        } catch (NoSuchAlgorithmException e) {
             e.printStackTrace();
         } catch (BadPaddingException e) {
             e.printStackTrace();
         } catch (InvalidKeyException e) {
             e.printStackTrace();
-        }catch (InvalidAlgorithmParameterException e) {
-            e.printStackTrace();
-        } catch (Exception e) {
-            e.printStackTrace();
+        } finally {
+            close(conn, pstmt, rs);
+            System.out.println("DB Connect Close");
         }
         return -1;
     }
@@ -164,11 +173,14 @@ public class MemberDao {
             pstmt.executeUpdate();
         } catch (SQLException e) {
             e.printStackTrace();
+        } finally {
+            close(conn, pstmt, rs);
+            System.out.println("DB Connect Close");
         }
     }
 
     /* Success 1, Fail all except 1 */
-    public int checkNickname(Member member){
+    public int checkNickname(Member member) {
         int count = 1;
         String selectSql = "select count(*) as c from member where nickname = ?;";
         try {
@@ -177,13 +189,16 @@ public class MemberDao {
             pstmt.setString(1, member.getNickname());
             rs = pstmt.executeQuery();
 
-            if (rs.next()){
+            if (rs.next()) {
                 count -= rs.getInt("c");
             }
 
             return count;
-        } catch (SQLException e){
+        } catch (SQLException e) {
             e.printStackTrace();
+        } finally {
+            close(conn, pstmt, rs);
+            System.out.println("DB Connect Close");
         }
         return 1;
     }

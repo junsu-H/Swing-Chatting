@@ -16,7 +16,7 @@ public class ChatClientGui extends JFrame {
 
     static Socket socket;
 
-    private static int PORT = 9632;
+    private static int PORT = 9625;
     private static String HOST;
 
     static {
@@ -35,9 +35,9 @@ public class ChatClientGui extends JFrame {
         }
     }
 
-    public ChatClientGui() {
+    public ChatClientGui(String nickname) {
         /* First Frame */
-        super("Client Chatting");
+        super("nickname Chatting");
         Font font = new Font("바탕", Font.PLAIN, 15);
         setFont(font);
         setLayout(null);
@@ -50,6 +50,7 @@ public class ChatClientGui extends JFrame {
         JScrollPane chatScroll = new JScrollPane(chatTextArea);
         chatScroll.setBounds(10, 10, 900, 760);
         chatTextArea.setEnabled(false);
+        chatTextArea.append(nickname + "이(가) 입장하였습니다.\n");
         this.add(chatScroll);
 
         /* 좌측 하단 대화 입력창 */
@@ -70,7 +71,41 @@ public class ChatClientGui extends JFrame {
 
         setVisible(true);
 
-        new Thread(new ClientThread()).start();
+//        new Thread(new ClientThread()).start();
+
+        new Thread() {
+            @Override
+            public void run() {
+                /* 읽어오기 */
+                BufferedReader bufferedReader = null;
+
+                try {
+                    /* 소켓 데이터 읽어오기 */
+                    bufferedReader = new BufferedReader(new InputStreamReader(socket.getInputStream()));
+                    while (true) {
+                        // Message from client
+                        String clientMessage = bufferedReader.readLine();
+
+                        if (clientMessage != null && clientMessage.trim().length() > 0) {
+                            chatTextArea.append(nickname + ": " + clientMessage + "\n");
+                            chatTextArea.setCaretPosition(chatTextArea.getText().length());
+                        }
+                    }
+                } catch (Exception e) {
+                    System.out.println(e + " => client run");
+                    e.printStackTrace();
+                } finally {
+                    try {
+                        bufferedReader.close();
+                        System.out.println("Read Fin");
+                        chatTextArea.append("\n**Read Fin**\n");
+                    } catch (IOException e) {
+                        System.out.println(e);
+                    }
+                }
+            }
+        }.start();
+
         clickSendBtn();
         enterInputTextField();
 
@@ -100,7 +135,6 @@ public class ChatClientGui extends JFrame {
         });
     }
 
-
     public static void enterInputTextField() {
         inputTextField.addActionListener(new ActionListener() {
             public void actionPerformed(ActionEvent e) {
@@ -112,43 +146,10 @@ public class ChatClientGui extends JFrame {
         });
     }
 
-    public static class ClientThread implements Runnable {
-        @Override
-        public void run() {
-            BufferedReader bufferedReader = null;
-
-            try {
-                bufferedReader = new BufferedReader(new InputStreamReader(socket.getInputStream()));
-                while (true) {
-                    // Message from client
-                    String clientMessage = bufferedReader.readLine();
-
-                    if (clientMessage != null && clientMessage.trim().length() > 0) {
-                        chatTextArea.append(clientMessage + "\n");
-                        chatTextArea.setCaretPosition(chatTextArea.getText().length());
-                    }
-                }
-            } catch (Exception e) {
-                System.out.println(e + " => client run");
-                e.printStackTrace();
-            } finally {
-                try {
-                    bufferedReader.close();
-                    System.out.println("Read Fin");
-                    chatTextArea.append("\n**Read Fin**\n");
-                } catch (IOException e) {
-                    System.out.println(e);
-                }
-            }
-        }
-
-    }
-
     public static void sendMessage(String message) {
         try {
             // 클라이언트에게 보내기 위한 준비
             BufferedWriter bufferedWriter = new BufferedWriter(new OutputStreamWriter(socket.getOutputStream()));
-
             bufferedWriter.write(message);
             bufferedWriter.newLine();
             bufferedWriter.flush();
@@ -159,8 +160,5 @@ public class ChatClientGui extends JFrame {
 
     }
 
-
-    public static void main(String[] args) {
-        new ChatClientGui();
-    }
 }
+//    }

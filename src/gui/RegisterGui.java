@@ -66,7 +66,7 @@ public class RegisterGui extends JFrame {
         contentPane.add(registerLabel);
 
         /* nickname JLabel */
-        JLabel nicknameLabel = new JLabel("ID");
+        JLabel nicknameLabel = new JLabel("NICKNAME");
         nicknameLabel.setBounds(70, 145, 70, 20);
         contentPane.add(nicknameLabel);
 
@@ -86,12 +86,12 @@ public class RegisterGui extends JFrame {
             public void actionPerformed(ActionEvent e) {
                 Member member = new Member(nicknameTextField.getText(), pwTextField.getText());
 
-                MemberDao dao = MemberDao.getInstance();
+                MemberDao dao = MemberDao.getMemberDao();
                 int save = 0;
                 int checkNickname = dao.checkNickname(member);
 
                 if (nicknameTextField.getText().trim().length() == 0){
-                    JOptionPane.showMessageDialog(null, "ID가 빈칸입니다.");
+                    JOptionPane.showMessageDialog(null, "NICKNAME이 빈칸입니다.");
                 }
                 else if (pwTextField.getText().trim().length() == 0){
                     JOptionPane.showMessageDialog(null, "PW가 빈칸입니다.");
@@ -110,7 +110,7 @@ public class RegisterGui extends JFrame {
                         }
                     }
                     else {
-                        JOptionPane.showMessageDialog(null, "nickname이 중복됩니다.");
+                        JOptionPane.showMessageDialog(null, "NICKNAME이 중복됩니다.");
                     }
                 }
             }

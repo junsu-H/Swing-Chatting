@@ -1,5 +1,7 @@
 package server;
 
+//import dao.MemberDao;
+
 import java.io.*;
 import java.net.InetAddress;
 import java.net.ServerSocket;
@@ -7,8 +9,7 @@ import java.net.Socket;
 import java.util.ArrayList;
 
 public class ChatServer {
-    private String HOST = InetAddress.getLocalHost().getHostAddress();
-    private int PORT = 9632;
+    private static final int PORT = 9625;
 
     private ServerSocket serverSocket = null;
     private Socket clientSocket = null;
@@ -17,23 +18,20 @@ public class ChatServer {
     private ArrayList<String> clientList = new ArrayList<>();
 
     public ChatServer() throws IOException {
+        final String HOST = InetAddress.getLocalHost().getHostAddress();
+
         try {
             serverSocket = new ServerSocket(PORT);
             System.out.println(HOST + ": " + PORT + " Ready");
+
             while (true) {
                 /* accept */
                 clientSocket = serverSocket.accept();
 
                 if (socketList.add(clientSocket)) {
-                    /* select로 nickname 읽어와야 됨 */
-                    BufferedReader bufferedReader = new BufferedReader(new InputStreamReader(clientSocket.getInputStream()));
-                    clientList.add(bufferedReader.readLine());
-                    System.out.println("Client Enter!!!");
-
                     new Thread(new ServerThread()).start();
                 }
             }
-
         } catch (Exception e) {
             System.out.println(e);
         }
@@ -44,16 +42,21 @@ public class ChatServer {
         public void run() {
             BufferedReader bufferedReader = null;
             try {
-                /* 클라이언트에서 보낸 메세지 읽기 */
+                /*
+                 * new BufferedReader(new InputStreamReader(clientSocket.getInputStream())) => Read data from the Client
+                 *
+                 */
+
+                /* 버퍼에 저장 */
                 bufferedReader = new BufferedReader(new InputStreamReader(clientSocket.getInputStream()));
                 while (true) {
+                    /* Read client Message */
                     String clientMessage = bufferedReader.readLine();
                     if (clientMessage.trim().length() > 0) {
                         ChatServer.this.spreadMessage(clientMessage);
                     }
-                    if (clientMessage.contains("out ")) {
-                        System.out.println("clear bufferLeader");
-                        break;
+                    if (clientMessage.contains("/quit")) {
+                        serverSocket.close();
                     }
                 }
             } catch (Exception e) {
@@ -88,9 +91,6 @@ public class ChatServer {
     }
 
     public static void main(String[] args) throws IOException {
-        boolean connect = false;
-        BufferedReader in = new BufferedReader(new InputStreamReader(System.in));
-        PrintStream out = System.out;
         new ChatServer();
     }
 }
