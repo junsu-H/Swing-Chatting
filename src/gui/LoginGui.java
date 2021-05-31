@@ -1,5 +1,6 @@
 package gui;
 
+import client.ChatClient;
 import dao.MemberDao;
 import models.Member;
 import util.AESUtil;
@@ -11,15 +12,10 @@ import javax.swing.*;
 import javax.swing.border.EmptyBorder;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
-import java.awt.event.WindowAdapter;
-import java.awt.event.WindowEvent;
 import java.io.UnsupportedEncodingException;
-import java.net.Socket;
 import java.security.InvalidAlgorithmParameterException;
 import java.security.InvalidKeyException;
 import java.security.NoSuchAlgorithmException;
-
-import static gui.ChatClientGui.sendMessage;
 
 public class LoginGui extends JFrame {
     private JPanel contentPane = null;
@@ -110,7 +106,7 @@ public class LoginGui extends JFrame {
 
                     if (member.getPassword().equals(decryptedPassword)) {
                         JOptionPane.showMessageDialog(null, "로그인 성공");
-                        new ChatClientGui(member);
+                        new ChatClient(member);
                     } else {
                         JOptionPane.showMessageDialog(null, "가입된 정보와 다릅니다.");
                     }
