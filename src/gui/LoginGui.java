@@ -19,7 +19,7 @@ import java.security.NoSuchAlgorithmException;
 
 public class LoginGui extends JFrame {
     private JPanel contentPane = null;
-    private JTextField nicknameTextField = null;
+    private static JTextField nicknameTextField = null;
     private JPasswordField pwTextField = null;
     private JButton loginBtn = null;
     private JButton registerBtn = null;
@@ -63,8 +63,8 @@ public class LoginGui extends JFrame {
     }
 
     public void createLabel() {
-        /* nickname JLabel */
-        JLabel nicknameLabel = new JLabel("NICKNAME");
+        /* EMAIL JLabel */
+        JLabel nicknameLabel = new JLabel("EMAIL");
         nicknameLabel.setBounds(50, 45, 60, 35);
         contentPane.add(nicknameLabel);
 
@@ -92,40 +92,25 @@ public class LoginGui extends JFrame {
             public void actionPerformed(ActionEvent e) {
                 try {
                     MemberDao dao = MemberDao.getInstance();
-                    member.setNickname(nicknameTextField.getText());
+                    member.setEmail(nicknameTextField.getText());
                     member.setPassword(String.valueOf(pwTextField.getPassword()));
 
                     String encryptedPassword = dao.findByPassword(member);
-                    System.out.println(encryptedPassword);
-
                     String decryptedPassword = AESUtil.decrypt(encryptedPassword);
 
-                    System.out.println("member.getPassword: " + member.getPassword());
-                    System.out.println("decry: " + decryptedPassword);
-
-
                     if (member.getPassword().equals(decryptedPassword)) {
-                        JOptionPane.showMessageDialog(null, "로그인 성공");
-                        new ChatClient(member);
+                        JOptionPane.showMessageDialog(null, "로그인 되었습니다. 채팅을 시작합니다.");
+                            new ChatClient();
+                    } else if (dao.findByEmail(member).equals("1")){
+                        JOptionPane.showMessageDialog(null, "아이디 혹은 비밀번호가 다릅니다.");
                     } else {
-                        JOptionPane.showMessageDialog(null, "가입된 정보와 다릅니다.");
+                        JOptionPane.showMessageDialog(null, "회원가입을 해주세요.");
                     }
 
                 } catch (InvalidAlgorithmParameterException invalidAlgorithmParameterException) {
-                    invalidAlgorithmParameterException.printStackTrace();
-                } catch (NoSuchPaddingException noSuchPaddingException) {
-                    System.out.println("test1");
-                } catch (IllegalBlockSizeException illegalBlockSizeException) {
-                    System.out.println("test2");
-                    illegalBlockSizeException.printStackTrace();
-                } catch (UnsupportedEncodingException unsupportedEncodingException) {
-                    System.out.println("test3");
-                } catch (NoSuchAlgorithmException noSuchAlgorithmException) {
-                    System.out.println("test4");
-                } catch (BadPaddingException badPaddingException) {
-                    System.out.println("test5");
-                } catch (InvalidKeyException invalidKeyException) {
-                    System.out.println("test6");
+                    System.out.println("DB에 가입 정보가 없습니다.");
+                } catch (Exception exception) {
+                    exception.printStackTrace();
                 }
             }
         });

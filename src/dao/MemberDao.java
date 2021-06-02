@@ -30,15 +30,15 @@ public class MemberDao {
     private ResultSet rs;
 
     /* Success 1, Fail -1 */
-    public String findByNickname(Member member){
-        String selectSql = "select nickname from member where nickname = ?;";
+    public String findByEmail(Member member){
+        String selectSql = "select email from member where email = ?;";
         try {
             conn = DBConnection.getConnection();
             /* query conn */
             pstmt = conn.prepareStatement(selectSql);
 
             /* selectSql ?에 들어갈 data setting */
-            pstmt.setString(1, member.getNickname());
+            pstmt.setString(1, member.getEmail());
 
             /* selectSql Query 리턴값 받아오기 */
             rs = pstmt.executeQuery();
@@ -59,14 +59,14 @@ public class MemberDao {
 
     /* Success 1, Fail -1 */
     public String findByPassword(Member member) {
-        String selectSql = "select password from member where nickname = ?;";
+        String selectSql = "select password from member where email = ?;";
         try {
             conn = DBConnection.getConnection();
             /* query conn */
             pstmt = conn.prepareStatement(selectSql);
 
             /* selectSql ?에 들어갈 data setting */
-            pstmt.setString(1, member.getNickname());
+            pstmt.setString(1, member.getEmail());
 
             /* selectSql Query 리턴값 받아오기 */
             rs = pstmt.executeQuery();
@@ -87,14 +87,14 @@ public class MemberDao {
 
     /* Success 1, Fail -1 */
     public int findByNicknameAndPassword(Member member) {
-        String selectSql = "select * from member where nickname = ? and password = ?;";
+        String selectSql = "select * from member where email = ? and password = ?;";
         try {
             conn = DBConnection.getConnection();
             /* query conn */
             pstmt = conn.prepareStatement(selectSql);
 
             /* selectSql ?에 들어갈 data setting */
-            pstmt.setString(1, member.getNickname());
+            pstmt.setString(1, member.getEmail());
             pstmt.setString(2, member.getPassword());
 
             /* selectSql Query 리턴값 받아오기 */
@@ -116,11 +116,11 @@ public class MemberDao {
 
     /* Success 1, Fail -1 */
     public int save(Member member) {
-        String insertSql = "insert into member(nickname, password) values(?,?);";
+        String insertSql = "insert into member(email, password) values(?,?);";
         try {
             conn = DBConnection.getConnection();
             pstmt = conn.prepareStatement(insertSql);
-            pstmt.setString(1, member.getNickname());
+            pstmt.setString(1, member.getEmail());
 
             KeyGenerator keyGenerator = KeyGenerator.getInstance("AES");
             SecureRandom secureRandom = new SecureRandom();
@@ -156,11 +156,11 @@ public class MemberDao {
 
     /* 탈퇴 시 */
     public void delete(Member member) {
-        String deleteSql = "delete from member where nickname = ?;";
+        String deleteSql = "delete from member where email = ?;";
         try {
             conn = DBConnection.getConnection();
             pstmt = conn.prepareStatement(deleteSql);
-            pstmt.setString(1, member.getNickname());
+            pstmt.setString(1, member.getEmail());
             pstmt.executeUpdate();
         } catch (SQLException e) {
             e.printStackTrace();
@@ -173,11 +173,11 @@ public class MemberDao {
     /* Success 1, Fail all except 1 */
     public int checkNickname(Member member) {
         int count = 1;
-        String selectSql = "select count(*) as c from member where nickname = ?;";
+        String selectSql = "select count(*) as c from member where email = ?;";
         try {
             conn = DBConnection.getConnection();
             pstmt = conn.prepareStatement(selectSql);
-            pstmt.setString(1, member.getNickname());
+            pstmt.setString(1, member.getEmail());
             rs = pstmt.executeQuery();
 
             if (rs.next()) {
