@@ -97,7 +97,6 @@ public class ChatClient extends JFrame {
 //                    System.out.println(fromServerMessage);
 
                     if (fromServerMessage != null && fromServerMessage.trim().length() > 0) {
-//                        chatTextArea.append(nickname + ": " +  fromServerMessage + "\n");
                         chatTextArea.append(fromServerMessage + "\n");
                         chatTextArea.setComponentOrientation(ComponentOrientation.LEFT_TO_RIGHT);
 
@@ -148,7 +147,7 @@ public class ChatClient extends JFrame {
         inputTextField.addActionListener(new ActionListener() {
             public void actionPerformed(ActionEvent e) {
                 if (inputTextField.getText().trim().length() > 0) {
-                    sendMessage(inputTextField.getText().trim() + "\n");
+                    sendMessage(nickname + " : " + inputTextField.getText().trim() + "\n");
                     inputTextField.setText(null);
                 }
             }
@@ -182,4 +181,3 @@ public class ChatClient extends JFrame {
     }
 
 }
-

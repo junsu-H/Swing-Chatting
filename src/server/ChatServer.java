@@ -43,23 +43,24 @@ public class ChatServer {
                 String nickname = fromClientBufferedReader.readLine();
 
                 /* client info */
-                clientList.add(nickname);
                 System.out.println("Connected Client: " + nickname);
                 System.out.println("Host: " + socket.getInetAddress().getHostAddress());
+
+                for (int i = 0; i < clientList.size(); i++) {
+                    System.out.println(clientList);
+                    sendMessage("[System]: " + clientList.get(i) + "가 입장하셨습니다.\n");
+                }
+                clientList.add(nickname);
+
                 if (socketList.add(socket)) {
-//                    for (int i = 0; i < clientList.size(); i++) {
-//                        System.out.println(clientList);
-//                        sendMessage("[System]: " + clientList.get(i) + "가 입장하셨습니다.\n");
-//                    }
                     new Thread(new receiveThread()).start();
+                    System.out.println(clientList);
 
                 }
             }
 
         } catch (Exception e) {
             System.out.println(e);
-        } finally {
-            socket.close();
         }
     }
 
@@ -86,8 +87,6 @@ public class ChatServer {
             }
         }
     }
-
-
 
     public void sendMessage(String message) {
         for (int i = socketList.size() - 1; i > -1; i--) {
