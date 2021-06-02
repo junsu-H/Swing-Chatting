@@ -22,7 +22,7 @@ public class ChatClient extends JFrame {
     private static int PORT = 9625;
     private static String HOST = "localhost";
 
-    public ChatClient() {
+    public ChatClient() throws IOException {
         setFont(font);
         setLayout(null);
         setDefaultCloseOperation(EXIT_ON_CLOSE);
@@ -73,13 +73,13 @@ public class ChatClient extends JFrame {
         setVisible(true);
     }
 
-    public String getNickname() {
+    public String getNickname() throws IOException {
         quit();
-
+        BufferedWriter bufferedWriter = new BufferedWriter((new OutputStreamWriter(socket.getOutputStream())));
         do {
             nickname = JOptionPane.showInputDialog("사용할 NICKNAME을 적어주세요.");
         } while (nickname == null || nickname.length() < 2);
-//        sendMessage("[System]: " + nickname + "가 입장하셨습니다.\n");
+        sendMessage(nickname);
         setTitle(nickname + "님의 채팅창");
         return nickname;
     }
@@ -136,7 +136,7 @@ public class ChatClient extends JFrame {
             @Override
             public void actionPerformed(ActionEvent e) {
                 if (inputTextField.getText().trim().length() > 0) {
-                    sendMessage(nickname + " : " + inputTextField.getText().trim() + "\n");
+                    sendMessage(nickname + ": " + inputTextField.getText().trim() + "\n");
                     inputTextField.setText(null);
                 }
             }
@@ -147,7 +147,7 @@ public class ChatClient extends JFrame {
         inputTextField.addActionListener(new ActionListener() {
             public void actionPerformed(ActionEvent e) {
                 if (inputTextField.getText().trim().length() > 0) {
-                    sendMessage(nickname + " : " + inputTextField.getText().trim() + "\n");
+                    sendMessage(nickname + ": " + inputTextField.getText().trim() + "\n");
                     inputTextField.setText(null);
                 }
             }

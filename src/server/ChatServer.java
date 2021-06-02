@@ -42,20 +42,17 @@ public class ChatServer {
                 /* 클라이언트의 이름 받기 */
                 String nickname = fromClientBufferedReader.readLine();
 
+                clientList.add(nickname);
+
                 /* client info */
                 System.out.println("Connected Client: " + nickname);
                 System.out.println("Host: " + socket.getInetAddress().getHostAddress());
 
-                for (int i = 0; i < clientList.size(); i++) {
-                    System.out.println(clientList);
-                    sendMessage("[System]: " + clientList.get(i) + "가 입장하셨습니다.\n");
-                }
-                clientList.add(nickname);
-
                 if (socketList.add(socket)) {
                     new Thread(new receiveThread()).start();
-                    System.out.println(clientList);
-
+                    for (int i = 0; i < clientList.size(); i++) {
+                        sendMessage("[System]: " + clientList.get(i) + "가 입장하셨습니다.\n");
+                    }
                 }
             }
 
