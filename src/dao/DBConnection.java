@@ -13,7 +13,6 @@ public class DBConnection {
         try {
             Class.forName(driver);
             conn = DriverManager.getConnection(url, id, pw);
-            System.out.println("DB Connect Success");
         } catch (ClassNotFoundException e) {
             System.out.println("Driver Loading Fail");
         } catch (SQLException e) {
@@ -24,11 +23,11 @@ public class DBConnection {
 
     public static void close(Connection c, PreparedStatement p, ResultSet r) {
         try {
-            if (r != null) r.close();
-            if (p != null) p.close();
             if (c != null) c.close();
-            System.out.println("c, p, r DB Close");
+            if (p != null) p.close();
+            if (r != null) r.close();
         } catch (Exception e) {
+            System.out.println("close(c, p, r) Error");
         }
     }
 

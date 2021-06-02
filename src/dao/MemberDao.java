@@ -34,16 +34,11 @@ public class MemberDao {
         String selectSql = "select email from member where email = ?;";
         try {
             conn = DBConnection.getConnection();
-            /* query conn */
             pstmt = conn.prepareStatement(selectSql);
-
-            /* selectSql ?에 들어갈 data setting */
             pstmt.setString(1, member.getEmail());
 
-            /* selectSql Query 리턴값 받아오기 */
             rs = pstmt.executeQuery();
 
-            /* select가 되면 ID가 있으므로 1 반환*/
             if (rs.next()) {
                 return rs.getString(1);
             }
@@ -51,9 +46,8 @@ public class MemberDao {
             e.printStackTrace();
         } finally {
             close(conn, pstmt, rs);
-            System.out.println("DB Connect Close");
         }
-        /* login fail */
+
         return String.valueOf(-1);
     }
 
@@ -62,16 +56,11 @@ public class MemberDao {
         String selectSql = "select password from member where email = ?;";
         try {
             conn = DBConnection.getConnection();
-            /* query conn */
             pstmt = conn.prepareStatement(selectSql);
-
-            /* selectSql ?에 들어갈 data setting */
             pstmt.setString(1, member.getEmail());
 
-            /* selectSql Query 리턴값 받아오기 */
             rs = pstmt.executeQuery();
 
-            /* select가 되면 ID가 있으므로 1 반환*/
             if (rs.next()) {
                 return rs.getString(1);
             }
@@ -79,9 +68,7 @@ public class MemberDao {
             e.printStackTrace();
         } finally {
             close(conn, pstmt, rs);
-            System.out.println("DB Connect Close");
         }
-        /* login fail */
         return String.valueOf(-1);
     }
 
@@ -90,17 +77,13 @@ public class MemberDao {
         String selectSql = "select * from member where email = ? and password = ?;";
         try {
             conn = DBConnection.getConnection();
-            /* query conn */
             pstmt = conn.prepareStatement(selectSql);
 
-            /* selectSql ?에 들어갈 data setting */
             pstmt.setString(1, member.getEmail());
             pstmt.setString(2, member.getPassword());
 
-            /* selectSql Query 리턴값 받아오기 */
             rs = pstmt.executeQuery();
 
-            /* select가 되면 1 반환 */
             if (rs.next()) {
                 return 1;
             }
@@ -108,10 +91,30 @@ public class MemberDao {
             e.printStackTrace();
         } finally {
             close(conn, pstmt, rs);
-            System.out.println("DB Connect Close");
         }
-        /* login fail */
         return -1;
+    }
+
+    /* Success 1, Fail all except 1 */
+    public int checkEmail(Member member) {
+        int count = 1;
+        String selectSql = "select count(*) as c from member where email = ?;";
+        try {
+            conn = DBConnection.getConnection();
+            pstmt = conn.prepareStatement(selectSql);
+            pstmt.setString(1, member.getEmail());
+            rs = pstmt.executeQuery();
+
+            if (rs.next()) {
+                count -= rs.getInt(1);
+            }
+            return count;
+        } catch (SQLException e) {
+            e.printStackTrace();
+        } finally {
+            close(conn, pstmt, rs);
+        }
+        return 1;
     }
 
     /* Success 1, Fail -1 */
@@ -133,28 +136,15 @@ public class MemberDao {
             return 1;
         } catch (InvalidAlgorithmParameterException e) {
             e.printStackTrace();
-        } catch (SQLException throwables) {
-            throwables.printStackTrace();
-        } catch (NoSuchPaddingException e) {
-            e.printStackTrace();
-        } catch (IllegalBlockSizeException e) {
-            e.printStackTrace();
-        } catch (UnsupportedEncodingException e) {
-            e.printStackTrace();
-        } catch (NoSuchAlgorithmException e) {
-            e.printStackTrace();
-        } catch (BadPaddingException e) {
-            e.printStackTrace();
-        } catch (InvalidKeyException e) {
-            e.printStackTrace();
+            System.out.println("회원가입이 안 되어 있습니다.");
+        } catch (Exception exception) {
+            exception.printStackTrace();
         } finally {
             close(conn, pstmt, rs);
-            System.out.println("DB Connect Close");
         }
         return -1;
     }
 
-    /* 탈퇴 시 */
     public void delete(Member member) {
         String deleteSql = "delete from member where email = ?;";
         try {
@@ -162,36 +152,13 @@ public class MemberDao {
             pstmt = conn.prepareStatement(deleteSql);
             pstmt.setString(1, member.getEmail());
             pstmt.executeUpdate();
+
         } catch (SQLException e) {
             e.printStackTrace();
         } finally {
             close(conn, pstmt, rs);
-            System.out.println("DB Connect Close");
         }
     }
 
-    /* Success 1, Fail all except 1 */
-    public int checkNickname(Member member) {
-        int count = 1;
-        String selectSql = "select count(*) as c from member where email = ?;";
-        try {
-            conn = DBConnection.getConnection();
-            pstmt = conn.prepareStatement(selectSql);
-            pstmt.setString(1, member.getEmail());
-            rs = pstmt.executeQuery();
-
-            if (rs.next()) {
-                count -= rs.getInt("c");
-            }
-
-            return count;
-        } catch (SQLException e) {
-            e.printStackTrace();
-        } finally {
-            close(conn, pstmt, rs);
-            System.out.println("DB Connect Close");
-        }
-        return 1;
-    }
 }
 

@@ -11,10 +11,12 @@ import java.awt.event.ActionListener;
 
 public class RegisterGui extends JFrame {
     JPanel contentPane = null;
-    JTextField nicknameTextField = null;
+    JTextField emailTextField = null;
     JPasswordField pwTextField = null;
     JPasswordField pwCheckTextField = null;
     JButton registerCompleteBtn = null;
+    JButton checkEmailBtn = null;
+    private boolean checkEmail = false;
 
     public RegisterGui() {
         super("REGISTER");
@@ -34,16 +36,22 @@ public class RegisterGui extends JFrame {
         registerCompleteBtn.setBounds(180, 360, 140, 35);
         contentPane.add(registerCompleteBtn);
 
+        /* CHECK EMAIL JButton */
+        checkEmailBtn = new JButton("CHECK");
+        checkEmailBtn.setBounds(350, 140, 80, 35);
+        contentPane.add(checkEmailBtn);
+
         setVisible(true);
 
+        clickCheckEmailBtn();
         clickRegisterCompleteBtn();
-}
+    }
     public void createTextField(){
-        /* NICKNAME JTextField */
-        nicknameTextField = new JTextField();
-        nicknameTextField.setColumns(10);
-        nicknameTextField.setBounds(160, 140, 185, 35);
-        contentPane.add(nicknameTextField);
+        /* EMAIL JTextField */
+        emailTextField = new JTextField();
+        emailTextField.setColumns(10);
+        emailTextField.setBounds(160, 140, 185, 35);
+        contentPane.add(emailTextField);
 
         /* PW JPasswordField */
         pwTextField = new JPasswordField();
@@ -65,10 +73,10 @@ public class RegisterGui extends JFrame {
         registerLabel.setBounds(160, 60, 200, 40);
         contentPane.add(registerLabel);
 
-        /* nickname JLabel */
-        JLabel nicknameLabel = new JLabel("NICKNAME");
-        nicknameLabel.setBounds(70, 145, 70, 20);
-        contentPane.add(nicknameLabel);
+        /* EMAIL JLabel */
+        JLabel emailLabel = new JLabel("EMAIL");
+        emailLabel.setBounds(70, 145, 70, 20);
+        contentPane.add(emailLabel);
 
         /* PW JLabel */
         JLabel pwLabel = new JLabel("PW");
@@ -81,17 +89,31 @@ public class RegisterGui extends JFrame {
         contentPane.add(pwCheckLabel);
     }
 
+    public void clickCheckEmailBtn(){
+        checkEmailBtn.addActionListener(new ActionListener() {
+            public void actionPerformed(ActionEvent e) {
+                Member member = new Member(emailTextField.getText(), pwTextField.getText());
+
+                MemberDao dao = MemberDao.getInstance();
+                if (dao.checkEmail(member) == 0){
+                    JOptionPane.showMessageDialog(null, "EMAIL이 중복됩니다.");
+                } else {
+                    JOptionPane.showMessageDialog(null, "사용 가능한 EMAIL입니다.");
+                    checkEmail = true;
+                }
+            }
+        });
+    }
+
     public void clickRegisterCompleteBtn(){
         registerCompleteBtn.addActionListener(new ActionListener() {
             public void actionPerformed(ActionEvent e) {
-                Member member = new Member(nicknameTextField.getText(), pwTextField.getText());
+                Member member = new Member(emailTextField.getText(), pwTextField.getText());
 
                 MemberDao dao = MemberDao.getInstance();
-                int save = 0;
-                int checkNickname = dao.checkNickname(member);
 
-                if (nicknameTextField.getText().trim().length() == 0){
-                    JOptionPane.showMessageDialog(null, "NICKNAME이 빈칸입니다.");
+                if (emailTextField.getText().trim().length() == 0){
+                    JOptionPane.showMessageDialog(null, "EMAIL이 빈칸입니다.");
                 }
                 else if (pwTextField.getText().trim().length() == 0){
                     JOptionPane.showMessageDialog(null, "PW가 빈칸입니다.");
@@ -103,19 +125,19 @@ public class RegisterGui extends JFrame {
                     JOptionPane.showMessageDialog(null, "PW와 PW CHECK가 다릅니다.");
                 }
                 else {
-                    if (checkNickname == 1){
-                        save = dao.save(member);
-                        if  (save == 1){
+                    if (checkEmail){
+                        if  (dao.save(member) == 1){
                             JOptionPane.showMessageDialog(null, "회원가입이 완료되었습니다.");
                         }
                     }
                     else {
-                        JOptionPane.showMessageDialog(null, "NICKNAME이 중복됩니다.");
+                        JOptionPane.showMessageDialog(null, "CHECK를 눌러 중복 확인을 하십시오.");
                     }
                 }
             }
         });
     }
+
 
     public static void main(String[] args) {
         EventQueue.invokeLater(new Runnable() {

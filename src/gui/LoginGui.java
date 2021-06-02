@@ -5,21 +5,15 @@ import dao.MemberDao;
 import models.Member;
 import util.AESUtil;
 
-import javax.crypto.BadPaddingException;
-import javax.crypto.IllegalBlockSizeException;
-import javax.crypto.NoSuchPaddingException;
 import javax.swing.*;
 import javax.swing.border.EmptyBorder;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
-import java.io.UnsupportedEncodingException;
 import java.security.InvalidAlgorithmParameterException;
-import java.security.InvalidKeyException;
-import java.security.NoSuchAlgorithmException;
 
 public class LoginGui extends JFrame {
     private JPanel contentPane = null;
-    private static JTextField nicknameTextField = null;
+    private static JTextField emailTextField = null;
     private JPasswordField pwTextField = null;
     private JButton loginBtn = null;
     private JButton registerBtn = null;
@@ -43,17 +37,17 @@ public class LoginGui extends JFrame {
 
         setVisible(true);
 
-        clickLoginBtn(new Member(nicknameTextField.getText(), pwTextField.getText()));
+        clickLoginBtn(new Member(emailTextField.getText(), pwTextField.getText()));
         clickRegisterBtn();
 
     }
 
     public void createTextField() {
-        /* NICKNAME JTextField */
-        nicknameTextField = new JTextField();
-        nicknameTextField.setBounds(150, 50, 175, 35);
-        contentPane.add(nicknameTextField);
-        nicknameTextField.setColumns(10);
+        /* EMAIL JTextField */
+        emailTextField = new JTextField();
+        emailTextField.setBounds(150, 50, 175, 35);
+        contentPane.add(emailTextField);
+        emailTextField.setColumns(10);
 
         /* PW JTextField */
         pwTextField = new JPasswordField();
@@ -92,7 +86,7 @@ public class LoginGui extends JFrame {
             public void actionPerformed(ActionEvent e) {
                 try {
                     MemberDao dao = MemberDao.getInstance();
-                    member.setEmail(nicknameTextField.getText());
+                    member.setEmail(emailTextField.getText());
                     member.setPassword(String.valueOf(pwTextField.getPassword()));
 
                     String encryptedPassword = dao.findByPassword(member);
