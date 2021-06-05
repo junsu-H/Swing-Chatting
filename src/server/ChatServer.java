@@ -74,7 +74,7 @@ public class ChatServer {
                     String clientMessage = bufferedReader.readLine();
                     if (clientMessage.trim().length() > 0) {
                         /* 읽은 메세지 서버가 전달 */
-                        ChatServer.this.sendMessage(clientMessage);
+                        ChatServer.this.sendMessage(emoticon(clientMessage));
                     }
                 }
             } catch (Exception e) {
@@ -100,6 +100,19 @@ public class ChatServer {
                 System.out.println("sendMessage Error");
             }
         }
+    }
+
+    public String emoticon(String message){
+        /* 이모티콘 유니코드 정보
+         * https://apps.timwhitlock.info/emoji/tables/unicode
+         */
+        message = message.replace(":)", new String(Character.toChars(0x1F603)));
+        message = message.replace(":D", new String(Character.toChars(0x1F604)));
+        message = message.replace(">_<", new String(Character.toChars(0x1F606)));
+        message = message.replace(":(", new String(Character.toChars(0x1F61E)));
+        message = message.replace("(하트)", new String(Character.toChars(0x1F60D)));
+        message = message.replace("(메롱)", new String(Character.toChars(0x1F61D)));
+        return message;
     }
 
     public static void main(String[] args) throws IOException {
