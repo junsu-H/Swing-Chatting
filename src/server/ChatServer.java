@@ -50,9 +50,7 @@ public class ChatServer {
 
                 if (socketList.add(socket)) {
                     new Thread(new receiveThread()).start();
-                    for (int i = 0; i < clientList.size(); i++) {
-                        sendMessage("[System]: " + clientList.get(i) + "가 입장하셨습니다.\n");
-                    }
+                    sendMessage("[System]: " + clientList.get(clientList.size()-1) + "님이 입장하셨습니다.\n");
                 }
             }
 
@@ -102,18 +100,6 @@ public class ChatServer {
                 System.out.println("sendMessage Error");
             }
         }
-    }
-
-    public synchronized void addClient(String nickname)
-    {
-        try {
-            ChatServer.this.sendMessage(nickname+" 입장하셨습니다.");
-            clientList.add(nickname);
-            System.out.println("채팅 참여 인원 : "+ clientList.size());
-        }catch(Exception e){
-            System.out.println("addClient Error");
-        }
-
     }
 
     public static void main(String[] args) throws IOException {

@@ -161,7 +161,7 @@ public class ChatClient extends JFrame {
                 super.windowClosing(e);
                 userListTextArea.append(String.valueOf(clientList));
                 clientList.remove(nickname);
-                sendMessage(nickname + "님이 퇴장하셨습니다.");
+                sendMessage("[System]: " + nickname + "님이 퇴장하셨습니다.");
             }
 
         });
