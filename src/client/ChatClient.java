@@ -83,10 +83,10 @@ public class ChatClient extends JFrame {
 
             try {
                 serverBufferedReader = new BufferedReader(new InputStreamReader(socket.getInputStream()));
-                clientList = serverBufferedReader.readLine().replace("[", "").replace("]", "").split(", ");
-                for (String c : clientList) {
-                    userListTextArea.append("@" + c + "\n");
-                }
+//                clientList = serverBufferedReader.readLine().replace("[", "").replace("]", "").split(", ");
+//                for (String c : clientList) {
+//                    userListTextArea.append("@" + c + "\n");
+//                }
 
                 while (true) {
                     String fromServerMessage = serverBufferedReader.readLine();

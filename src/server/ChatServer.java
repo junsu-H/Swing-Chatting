@@ -51,10 +51,9 @@ public class ChatServer {
 
                 if (socketList.add(socket)) {
 //                    for (String cl: clientList)
-                    sendMessage(String.valueOf(clientList));
+//                    sendMessage(String.valueOf(clientList));
                     sendMessage("[System]: " + clientList.get(clientList.size()-1) + "님이 입장하셨습니다.\n");
                     new Thread(new receiveThread()).start();
-                    toClientBufferedWriter = new BufferedWriter(new OutputStreamWriter(socket.getOutputStream()));
 
                 }
                 System.out.println("Client List: " + clientList);
