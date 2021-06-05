@@ -17,7 +17,7 @@ public class ChatServer {
     private Vector<Socket> socketList = new Vector<>();
 
     /* 클라이언트 닉네임 목록 */
-    private ArrayList<String> clientList = new ArrayList<>();
+    public static ArrayList<String> clientList = new ArrayList<>();
 
     public ChatServer() throws IOException {
         final String HOST = InetAddress.getLocalHost().getHostAddress();
@@ -30,6 +30,7 @@ public class ChatServer {
 
             /* 클라이언트한테 데이터를 받을 객체 */
             BufferedReader fromClientBufferedReader = null;
+            BufferedWriter toClientBufferedWriter = null;
 
             /* 멀티 접속을 위한 while */
             while (true) {
@@ -49,9 +50,14 @@ public class ChatServer {
                 System.out.println("Host: " + socket.getInetAddress().getHostAddress());
 
                 if (socketList.add(socket)) {
-                    new Thread(new receiveThread()).start();
+//                    for (String cl: clientList)
+                    sendMessage(String.valueOf(clientList));
                     sendMessage("[System]: " + clientList.get(clientList.size()-1) + "님이 입장하셨습니다.\n");
+                    new Thread(new receiveThread()).start();
+                    toClientBufferedWriter = new BufferedWriter(new OutputStreamWriter(socket.getOutputStream()));
+
                 }
+                System.out.println("Client List: " + clientList);
             }
 
         } catch (Exception e) {
@@ -74,7 +80,7 @@ public class ChatServer {
                     String clientMessage = bufferedReader.readLine();
                     if (clientMessage.trim().length() > 0) {
                         /* 읽은 메세지 서버가 전달 */
-                        ChatServer.this.sendMessage(emoticon(clientMessage));
+                        ChatServer.this.sendMessage(emoji(clientMessage));
                     }
                 }
             } catch (Exception e) {
@@ -102,7 +108,7 @@ public class ChatServer {
         }
     }
 
-    public String emoticon(String message){
+    public String emoji(String message){
         /* 이모티콘 유니코드 정보
          * https://apps.timwhitlock.info/emoji/tables/unicode
          */

@@ -1,5 +1,7 @@
 package client;
 
+import server.ChatServer;
+
 import javax.swing.*;
 import java.awt.*;
 import java.awt.event.*;
@@ -15,7 +17,7 @@ public class ChatClient extends JFrame {
     private static JTextArea userListTextArea = null;
     private static JScrollPane userListScroll;
 
-    private static ArrayList<String> clientList = new ArrayList<>();
+    private static String[] clientList;
     private static String nickname;
 
     private static Socket socket;
@@ -55,16 +57,6 @@ public class ChatClient extends JFrame {
             e.printStackTrace();
         }
 
-        /* 우측 상단 유저 목록 */
-        userListTextArea = new JTextArea();
-        userListTextArea.setMargin(new Insets(20, 20, 20, 20));
-        userListTextArea.setEditable(false);
-        userListTextArea.setVisible(true);
-        userListScroll = new JScrollPane(userListTextArea);
-        userListScroll.setBounds(930, 10, 300, 760);
-        userListScroll.setFont(font);
-
-
         this.add(userListTextPane(getNickname()));
 
         new Thread(new ClientThread()).start();
@@ -91,10 +83,13 @@ public class ChatClient extends JFrame {
 
             try {
                 serverBufferedReader = new BufferedReader(new InputStreamReader(socket.getInputStream()));
-                while (true) {
+                clientList = serverBufferedReader.readLine().replace("[", "").replace("]", "").split(", ");
+                for (String c : clientList) {
+                    userListTextArea.append("@" + c + "\n");
+                }
 
+                while (true) {
                     String fromServerMessage = serverBufferedReader.readLine();
-//                    System.out.println(fromServerMessage);
 
                     if (fromServerMessage != null && fromServerMessage.trim().length() > 0) {
                         chatTextArea.append(fromServerMessage + "\n");
@@ -118,16 +113,18 @@ public class ChatClient extends JFrame {
     }
 
     /* 우측 상단 유저 목록 */
-    public JTextArea userListTextPane(String nickname) {
-        JTextArea userListTextArea = new JTextArea();
+    public JTextArea userListTextPane(String nickname) throws IOException {
+        userListTextArea = new JTextArea();
+        userListScroll = new JScrollPane(userListTextArea);
+        userListScroll.setBounds(930, 10, 300, 760);
+        userListScroll.setFont(font);
         userListTextArea.setBounds(930, 10, 300, 760);
         userListTextArea.setFont(font);
         userListTextArea.setMargin(new Insets(20, 20, 20, 20));
         userListTextArea.setEditable(false);
         userListTextArea.setVisible(true);
-//        clientList.add(nickname);
-//        sendMessage(nickname);
-//        userListTextArea.append("@" + clientList);
+//        BufferedReader bufferedReader = new BufferedReader(new InputStreamReader(socket.getInputStream()));
+//        userListTextArea.append("@" + bufferedReader.readLine());
         return userListTextArea;
     }
 
@@ -159,8 +156,8 @@ public class ChatClient extends JFrame {
             @Override
             public void windowClosing(WindowEvent e) {
                 super.windowClosing(e);
-                userListTextArea.append(String.valueOf(clientList));
-                clientList.remove(nickname);
+                userListTextArea.append(String.valueOf(ChatServer.clientList));
+//                clientList.remove(nickname);
                 sendMessage("[System]: " + nickname + "님이 퇴장하셨습니다.");
             }
 
