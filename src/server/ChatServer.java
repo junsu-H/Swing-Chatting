@@ -30,7 +30,6 @@ public class ChatServer {
 
             /* 클라이언트한테 데이터를 받을 객체 */
             BufferedReader fromClientBufferedReader = null;
-            BufferedWriter toClientBufferedWriter = null;
 
             /* 멀티 접속을 위한 while */
             while (true) {
@@ -43,20 +42,18 @@ public class ChatServer {
                 /* 클라이언트의 이름 받기 */
                 String nickname = fromClientBufferedReader.readLine();
 
-                clientList.add(nickname);
-
                 /* client info */
                 System.out.println("Connected Client: " + nickname);
                 System.out.println("Host: " + socket.getInetAddress().getHostAddress());
 
                 if (socketList.add(socket)) {
-//                    for (String cl: clientList)
-//                    sendMessage(String.valueOf(clientList));
+                    clientList.add(nickname);
+                    sendMessage(String.valueOf(clientList));
                     sendMessage("[System]: " + clientList.get(clientList.size()-1) + "님이 입장하셨습니다.\n");
                     new Thread(new receiveThread()).start();
 
                 }
-                System.out.println("Client List: " + clientList);
+//                System.out.println("Client List: " + clientList);
             }
 
         } catch (Exception e) {

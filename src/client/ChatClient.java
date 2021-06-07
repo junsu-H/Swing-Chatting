@@ -1,6 +1,7 @@
 package client;
 
 import server.ChatServer;
+import util.Translate;
 
 import javax.swing.*;
 import java.awt.*;
@@ -93,6 +94,7 @@ public class ChatClient extends JFrame {
 
                     if (fromServerMessage != null && fromServerMessage.trim().length() > 0) {
                         chatTextArea.append(fromServerMessage + "\n");
+                        chatTextArea.append(Translate.translate(fromServerMessage) + "\n");
                         chatTextArea.setComponentOrientation(ComponentOrientation.LEFT_TO_RIGHT);
 
                     }
@@ -156,7 +158,7 @@ public class ChatClient extends JFrame {
             @Override
             public void windowClosing(WindowEvent e) {
                 super.windowClosing(e);
-                userListTextArea.append(String.valueOf(ChatServer.clientList));
+//                userListTextArea.append(String.valueOf(ChatServer.clientList));
 //                clientList.remove(nickname);
                 sendMessage("[System]: " + nickname + "님이 퇴장하셨습니다.");
             }
