@@ -1,9 +1,8 @@
 package gui;
 
-import client.ChatClient;
+import client.StressClient;
 import dao.MemberDao;
 import models.Member;
-import server.VoiceServer;
 import util.AESUtil;
 
 import javax.swing.*;
@@ -95,7 +94,7 @@ public class LoginGui extends JFrame {
 
                     if (member.getPassword().equals(decryptedPassword)) {
                         JOptionPane.showMessageDialog(null, "로그인 되었습니다. 채팅을 시작합니다.");
-                            new ChatClient();
+                            new StressClient();
                     } else if (dao.findByEmail(member).equals("1")){
                         JOptionPane.showMessageDialog(null, "아이디 혹은 비밀번호가 다릅니다.");
                     } else {

@@ -1,6 +1,5 @@
 package client;
 
-import server.ChatServer;
 import util.Translate;
 
 import javax.swing.*;
@@ -8,7 +7,6 @@ import java.awt.*;
 import java.awt.event.*;
 import java.io.*;
 import java.net.Socket;
-import java.util.ArrayList;
 
 public class ChatClient extends JFrame {
     private static Font font = new Font("바탕", Font.PLAIN, 15);

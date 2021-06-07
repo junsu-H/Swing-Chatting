@@ -13,8 +13,8 @@ import org.json.simple.parser.ParseException;
 
 public class Translate {
     public static String translate(String pmessage) throws ParseException {
-        String clientId = "input ClientID";//애플리케이션 클라이언트 아이디값";
-        String clientSecret = "input Client Secret";//애플리케이션 클라이언트 시크릿값";
+        String clientId = "xIvNWA9wZAWV32E34ttK";//애플리케이션 클라이언트 아이디값";
+        String clientSecret = "ZLKx5j7wef";//애플리케이션 클라이언트 시크릿값";
         String apiURL = "https://openapi.naver.com/v1/papago/n2mt";
         String text;
         ArrayList<String> res = new ArrayList<>();
