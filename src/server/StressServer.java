@@ -55,8 +55,10 @@ public class StressServer {
     }
 
     class UserInfo implements Runnable {
-        private DataOutputStream dataOutputStream;
-        private DataInputStream dataInputStream;
+//        private DataOutputStream dataOutputStream;
+//        private DataInputStream dataInputStream;
+
+        private BufferedReader bufferedReader = null;
 
         private Socket socket;
         private String nickname = "guest";
@@ -71,7 +73,11 @@ public class StressServer {
             try {
                 while (true) {
                     // 클라이언트 메세지 받기
-                    String clientMessage = dataInputStream.readUTF();
+//                    String clientMessage = dataInputStream.readUTF();
+                    bufferedReader = new BufferedReader(new InputStreamReader(socket.getInputStream(), "UTF-8"));
+
+                    String clientMessage = bufferedReader.readLine();
+                    System.out.println(clientMessage);
                     if (clientMessage.trim().length() > 0) {
                         System.out.println("server => " + nickname + ": " + clientMessage);
                         receiveMessage(clientMessage);
@@ -85,10 +91,13 @@ public class StressServer {
 
         public void clientCommunication() {
             try {
-                dataInputStream = new DataInputStream(StressServer.this.socket.getInputStream());
-                dataOutputStream = new DataOutputStream(StressServer.this.socket.getOutputStream());
+                BufferedReader bufferedReader = new BufferedReader(new InputStreamReader(socket.getInputStream(), "UTF-8"));
+                nickname = bufferedReader.readLine(); // 사용자 닉네임 받기
 
-                nickname = dataInputStream.readUTF(); // 사용자 닉네임 받기
+//                dataInputStream = new DataInputStream(StressServer.this.socket.getInputStream());
+//                dataOutputStream = new DataOutputStream(StressServer.this.socket.getOutputStream());
+//                nickname = dataInputStream.readUTF(); // 사용자 닉네임 받기
+
                 System.out.println("이것이 nickname이다: " + nickname);
 
                 broadCast("newUser/" + nickname);                 // 자신에게 기존 사용자를 알림
@@ -109,12 +118,14 @@ public class StressServer {
                     sendMessage("oldRoom/" + roomInfo.roomName);
                 }
             } catch (IOException e) {
-                try {
-                    dataOutputStream.close();
-                    dataInputStream.close();
-                } catch (IOException ioException) {
-                    ioException.printStackTrace();
-                }
+//                try {
+////                    dataInputStream.close();
+////                    dataOutputStream.close();
+//                    bufferedWriter.close();
+//                    bufferedReader.close();
+//                } catch (IOException ioException) {
+//                    ioException.printStackTrace();
+//                }
                 e.printStackTrace();
             }
         }
@@ -196,17 +207,32 @@ public class StressServer {
                 userVector.elementAt(i).sendMessage(nickname);
         }
 
-        /* 클라이언트로 데이터 보내기 */
         public void sendMessage(String message) {
             try {
-                dataOutputStream.writeUTF(message);
-//                dataOutputStream.flush();
+                /* 데이터 보내기 */
+                BufferedWriter bufferedWriter = new BufferedWriter(new OutputStreamWriter(socket.getOutputStream()));
+                bufferedWriter.write(message);
+                bufferedWriter.newLine();
+                bufferedWriter.flush();
             } catch (IOException ioException) {
                 ioException.printStackTrace();
+                System.out.println("sendMessage Error");
             }
-        }
 
+        }
     }
+
+//        /* 클라이언트로 데이터 보내기 */
+//        public void sendMessage(String message) {
+//            try {
+//                dataOutputStream.writeUTF(message);
+//                dataOutputStream.flush();
+//            } catch (IOException ioException) {
+//                ioException.printStackTrace();
+//            }
+//        }
+//
+//    }
 
     class RoomInfo {
         private String roomName;
@@ -227,6 +253,7 @@ public class StressServer {
         private void addUser(UserInfo userInfo) {
             this.roomUserVector.add(userInfo);
         }
+
     }
 
     public String emoji(String message) {

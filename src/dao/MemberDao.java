@@ -4,10 +4,7 @@ import models.Member;
 import util.AESUtil;
 
 import javax.crypto.*;
-import java.io.UnsupportedEncodingException;
 import java.security.InvalidAlgorithmParameterException;
-import java.security.InvalidKeyException;
-import java.security.NoSuchAlgorithmException;
 import java.security.SecureRandom;
 import java.sql.Connection;
 import java.sql.PreparedStatement;
@@ -130,7 +127,7 @@ public class MemberDao {
             keyGenerator.init(128, secureRandom);
 
             String password = member.getPassword();
-            String encrypted = AESUtil.encrypt(password);
+            String encrypted = AESUtil.encrypt(password, AESUtil.dbIv);
             pstmt.setString(2, encrypted);
             pstmt.executeUpdate();
             return 1;
