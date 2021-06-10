@@ -31,12 +31,4 @@ public class DBConnection {
         }
     }
 
-    public static void close(Connection c, PreparedStatement p) {
-        try {
-            if (p != null) p.close();
-            if (c != null) c.close();
-        } catch (Exception e) {
-        }
-    }
-
 }

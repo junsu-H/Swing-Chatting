@@ -1,25 +1,16 @@
 package client;
 
 import org.json.simple.parser.ParseException;
-import util.AESUtil;
 import util.Translate;
 
-import javax.crypto.BadPaddingException;
-import javax.crypto.IllegalBlockSizeException;
-import javax.crypto.NoSuchPaddingException;
 import javax.swing.*;
 import javax.swing.border.EmptyBorder;
 import java.awt.*;
 import java.awt.event.*;
 import java.io.*;
 import java.net.Socket;
-import java.security.InvalidAlgorithmParameterException;
-import java.security.InvalidKeyException;
-import java.security.NoSuchAlgorithmException;
 import java.util.StringTokenizer;
 import java.util.Vector;
-
-import static util.AESUtil.*;
 
 public class StressClient extends JFrame {
     /* HOST, IP */
@@ -27,17 +18,12 @@ public class StressClient extends JFrame {
     private static final int PORT = 9625;
 
     /* socket */
-    private static Socket socket;
+    private Socket socket;
     private String nickname;
 
     /* Stream */
-//    private DataInputStream dataInputStream;
-//    private DataOutputStream dataOutputStream;
-
-
-    private BufferedWriter bufferedWriter;
-    private BufferedReader bufferedReader;
-
+    private DataInputStream dataInputStream;
+    private DataOutputStream dataOutputStream;
 
     /* 현재 내 방 */
     private String myRoom = "general";
@@ -47,12 +33,10 @@ public class StressClient extends JFrame {
 
     private JPanel pane;
     private JTextArea chatTextArea;
+    private JScrollPane chatScroll;
     private JTextField inputTextField;
     private JList userList = new JList();
     private JList roomList = new JList();
-
-    private JScrollPane chatScroll;
-
 
     private JButton sendBtn = new JButton("전송");
     private JButton noteBtn = new JButton("쪽지 보내기");
@@ -67,17 +51,9 @@ public class StressClient extends JFrame {
         new StressClient();
     }
 
-    public void inputDialogNickname() {
-        do {
-            nickname = JOptionPane.showInputDialog("2글자 이상 사용할 NICKNAME을 적어주세요.");
-        } while (nickname == null || nickname.length() < 2);
-        setTitle(nickname + "님의 채팅창");
-    }
-
     public StressClient() {
-        inputDialogNickname();
-//        nickname = JOptionPane.showInputDialog("사용할 NICKNAME을 적어주세요.");
-//        setTitle(nickname + "님의 채팅창");
+        nickname = JOptionPane.showInputDialog("사용할 NICKNAME을 적어주세요.");
+        setTitle(nickname + "님의 채팅창");
         createSocket();
         setFont(font);
         setLayout(null);
@@ -122,8 +98,6 @@ public class StressClient extends JFrame {
         pane.add(roomLabel);
 
         roomList.setBounds(625, 240, 125, 150);
-        roomVector.add(myRoom);
-        roomList.setListData(roomVector);
         pane.add(roomList);
 
         createRoomBtn.setFont(font);
@@ -144,31 +118,21 @@ public class StressClient extends JFrame {
         userList.setListData(userVector);
         clickSendBtn();
         enterInputTextField();
-        quit();
     }
 
 
     public void createSocket() {
         try {
             socket = new Socket(HOST, PORT);
-
+            connect();
         } catch (Exception e) {
-            System.out.println("new Socket Error");
-        } finally {
-            try {
-                connect();
-            } catch (IOException e) {
-                System.out.println("connect() error");
-            }
+            System.out.println("Server Connect Error");
         }
     }
 
     public void connect() throws IOException {
-//        dataInputStream = new DataInputStream(socket.getInputStream());
-//        dataOutputStream = new DataOutputStream(socket.getOutputStream());
-
-        bufferedWriter = new BufferedWriter(new OutputStreamWriter(socket.getOutputStream(), "UTF-8"));
-        bufferedReader = new BufferedReader(new InputStreamReader(socket.getInputStream(), "UTF-8"));
+        dataInputStream = new DataInputStream(socket.getInputStream());
+        dataOutputStream = new DataOutputStream(socket.getOutputStream());
 
         // 처음 접속 시에 ID 전송
         sendMessage(nickname);
@@ -182,32 +146,12 @@ public class StressClient extends JFrame {
                 try {
                     while (true) {
                         // 메세지 수신
-//                        String message = dataInputStream.readUTF();
-
-                        String message = bufferedReader.readLine();
-                        System.out.println("3. receiveMessage: " + message);
+                        String msg = dataInputStream.readUTF();
+                        System.out.println("서버가 보낸 메세지: " + msg);
                         // userVector
-                        receiveMessage(message);
+                        receiveMessage(msg);
                     }
-                } catch (IOException e) {
-                    e.printStackTrace();
-                } catch (InvalidAlgorithmParameterException e) {
-
-                } catch (NoSuchPaddingException e) {
-                    e.printStackTrace();
-                } catch (IllegalBlockSizeException e) {
-                    e.printStackTrace();
-                } catch (ParseException e) {
-                    e.printStackTrace();
-                } catch (NoSuchAlgorithmException e) {
-                    e.printStackTrace();
-                } catch (BadPaddingException e) {
-                    e.printStackTrace();
-                } catch (InvalidKeyException e) {
-                    e.printStackTrace();
-                } catch (NoSuchFieldException e) {
-                    e.printStackTrace();
-                } catch (IllegalAccessException e) {
+                } catch (IOException | ParseException e) {
                     e.printStackTrace();
                 }
 
@@ -216,34 +160,26 @@ public class StressClient extends JFrame {
     }
 
     // 서버로부터 들어오는 모든 메세지
-    public void receiveMessage(String pMessage) throws ParseException, NoSuchAlgorithmException, InvalidAlgorithmParameterException, NoSuchPaddingException, IllegalBlockSizeException, BadPaddingException, InvalidKeyException, UnsupportedEncodingException, NoSuchFieldException, IllegalAccessException {
-        tokenizer = new StringTokenizer(pMessage, "?");
+    public void receiveMessage(String pMessage) throws ParseException {
+        tokenizer = new StringTokenizer(pMessage, "/");
         String protocol = tokenizer.nextToken();
-        String secondParam = tokenizer.nextToken();
+        String message = tokenizer.nextToken();
 
-//        System.out.println("프로토콜: " + protocol);
-//        System.out.println("내용: " + secondParam);
+        System.out.println("프로토콜: " + protocol);
+        System.out.println("내용: " + message);
 
         if (protocol.equals("newUser")) {
-            userVector.add(secondParam.trim());
+            userVector.add(message.trim());
 
         } else if (protocol.equals("chatting")) {
-            String message = tokenizer.nextToken();
-//            chatTextArea.append(secondParam +  ": " + message);
-
-            // 여기가 에러남.
-            String decryptMessage = AESUtil.decrypt(AESUtil.ofb, AESUtil.messageIv, message);
-            System.out.println("4. append decryptMessage: "  + decryptMessage);
-
-//            System.out.println("decryptMessage: " + decryptMessage);
-//            chatTextArea.append(message);
-            chatTextArea.append(secondParam + ": " + decryptMessage + "\n");
-            chatTextArea.append(secondParam + ": " + Translate.translate(decryptMessage) + "\n");
-            chatScroll.getVerticalScrollBar().setValue(chatScroll.getVerticalScrollBar().getMaximum());
+            String msg = tokenizer.nextToken();
+            chatTextArea.append(message + ": " + msg + "\n");
+            chatTextArea.append(Translate.translate(message + ": " + msg) + "\n");
+            System.out.println("protocol" + message + ": " + msg + "\n");
         } else if (protocol.equals("oldUser")) {
-            userVector.add(secondParam.trim());
+            userVector.add(message.trim());
         } else if (protocol.equals("note")) {
-            tokenizer = new StringTokenizer(secondParam, "@");
+            tokenizer = new StringTokenizer(message, "@");
             String user = tokenizer.nextToken();
             String note = tokenizer.nextToken();
             System.out.println(user + "사용자로부터 온 쪽지 " + note);
@@ -251,98 +187,53 @@ public class StressClient extends JFrame {
         } else if (protocol.equals("userListUpdate")) {
             userList.setListData(userVector);
         } else if (protocol.equals("createRoom")) { // 새로운 방 만들었을 때
-            myRoom = secondParam;
+            myRoom = message;
         } else if (protocol.equals("createRoomFail")) { // 방 만들기 실패
             JOptionPane.showMessageDialog(null, "방 만들기 실패", "알림", JOptionPane.CLOSED_OPTION);
         } else if (protocol.equals("newRoom")) {
-            roomVector.add(secondParam);
+            roomVector.add(message);
             roomList.setListData(roomVector);
 
         } else if (protocol.equals("oldRoom")) {
-            roomVector.add(secondParam);
+            roomVector.add(message);
         } else if (protocol.equals("roomListUpdate")) {
             roomList.setListData(roomVector);
         } else if (protocol.equals("joinRoom")) {
-            myRoom = secondParam;
+            myRoom = message;
             JOptionPane.showMessageDialog(null, myRoom + " 채팅방에 입장했습니다.", "알림", JOptionPane.INFORMATION_MESSAGE);
-        } else if (protocol.equals("quit")) {
-            userVector.remove(secondParam);
-            userList.setListData(userVector);
-            chatTextArea.append("[System] " + secondParam + "님이 나갔습니다.");
-
         }
     }
-
-
-//    public void sendMessage(String message) {
-//        try {
-//            // 채팅에서 유저가 보내는 메세지
-//            dataOutputStream.writeUTF(message);
-//            dataOutputStream.flush();
-//
-//        } catch (Exception sendError) {
-//            System.out.println("메시지 전송 에러 : " + sendError);
-//        }
-//    }
 
 
     public void sendMessage(String message) {
         try {
-            /* 데이터 보내기 */
-            bufferedWriter.write(message);
-            bufferedWriter.newLine();
-            bufferedWriter.flush();
-        } catch (IOException ioException) {
-            ioException.printStackTrace();
-            System.out.println("sendMessage Error");
-        }
-
-    }
-
-    private void encryptSendMessage() {
-        try {
-            String encryptMessage = AESUtil.encrypt(AESUtil.ofb, AESUtil.messageIv, inputTextField.getText().trim()).trim();
-            System.out.println("1. Client의 encryptSendMessage: " + encryptMessage);
-            sendMessage("chatting?" + myRoom + "?" + encryptMessage);
-
-//            sendMessage("chatting/" + myRoom + "/" + inputTextField.getText().trim());
-//            System.out.println("chatting/" + myRoom + "/" + inputTextField.getText().trim());
-            inputTextField.setText(null);
-        } catch (NoSuchPaddingException noSuchPaddingException) {
-            noSuchPaddingException.printStackTrace();
-        } catch (NoSuchAlgorithmException noSuchAlgorithmException) {
-            noSuchAlgorithmException.printStackTrace();
-        } catch (InvalidAlgorithmParameterException invalidAlgorithmParameterException) {
-            invalidAlgorithmParameterException.printStackTrace();
-        } catch (InvalidKeyException invalidKeyException) {
-            invalidKeyException.printStackTrace();
-        } catch (BadPaddingException badPaddingException) {
-            badPaddingException.printStackTrace();
-        } catch (IllegalBlockSizeException illegalBlockSizeException) {
-            illegalBlockSizeException.printStackTrace();
-        } catch (UnsupportedEncodingException e) {
-            e.printStackTrace();
+            dataOutputStream.writeUTF(message);
+            dataOutputStream.flush();
+        } catch (Exception sendError) {
+            System.out.println("메시지 전송 에러 : " + sendError);
         }
     }
 
-    /* 1. Client -> Server Message */
     public void clickSendBtn() {
         sendBtn.addActionListener(new ActionListener() {
             @Override
             public void actionPerformed(ActionEvent e) {
                 if (inputTextField.getText().trim().length() > 0) {
-                    encryptSendMessage();
+                    sendMessage("chatting/" + myRoom + "/" + inputTextField.getText().trim());
+                    System.out.println("chatting/" + myRoom + "/" + inputTextField.getText().trim());
+                    inputTextField.setText(null);
                 }
             }
         });
     }
 
-    /* 1. Client -> Server Message */
     public void enterInputTextField() {
         inputTextField.addActionListener(new ActionListener() {
             public void actionPerformed(ActionEvent e) {
                 if (inputTextField.getText().trim().length() > 0) {
-                    encryptSendMessage();
+                    sendMessage("chatting/" + myRoom + "/" + inputTextField.getText().trim());
+                    System.out.println("chatting/" + myRoom + "/" + inputTextField.getText().trim());
+                    inputTextField.setText(null);
                 }
             }
         });
@@ -353,16 +244,18 @@ public class StressClient extends JFrame {
     }
 
 
-    public void quit() {
-        addWindowListener(new WindowAdapter() {
-            @Override
-            public void windowClosing(WindowEvent e) {
-                super.windowClosing(e);
-                sendMessage("quit?" + nickname);
-            }
-
-        });
-    }
-
+//    public void quit() {
+//        addWindowListener(new WindowAdapter() {
+//            @Override
+//            public void windowClosing(WindowEvent e) {
+//                super.windowClosing(e);
+////                userListTextArea.append(String.valueOf(ChatServer.clientList));
+////                clientList.remove(nickname);
+//                sendMessage("[System]: " + nickname + "님이 퇴장하셨습니다.");
+//            }
+//
+//        });
+//    }
+//
 
 }

@@ -1,98 +1,59 @@
 package server;
+
 import java.io.*;
-import java.net.*;
+import java.net.InetAddress;
+import java.net.ServerSocket;
+import java.net.Socket;
 import java.util.ArrayList;
+import java.util.Vector;
 
 public class TestServer {
-    private int PORT = 9632;
-    private String IP = InetAddress.getLocalHost().getHostAddress();
+    private static final int PORT = 9625;
 
-    private ServerSocket serverSocket;
+    private ServerSocket serverSocket = null;
+    private Socket socket = null;
 
-    private Socket clientSocket;
+    /* 클라이언트 소켓리스트 */
+    private Vector<Socket> socketList = new Vector<>();
 
+    /* 클라이언트 닉네임 목록 */
+    public static ArrayList<String> clientList = new ArrayList<>();
 
-//    private boolean condition = true;
-//
-//
-    private ArrayList<Socket> socketList = new ArrayList<>();
-    private ArrayList<String> clientList = new ArrayList<>();
-    private int numberOfClient = 0;
+    public TestServer() throws IOException {
+        final String HOST = InetAddress.getLocalHost().getHostAddress();
 
-    public TestServer() throws UnknownHostException {
         try {
+            System.out.println("connecting...");
 
-            /* create serverSocket */
             serverSocket = new ServerSocket(PORT);
+            System.out.println(HOST + ": " + PORT + " Ready");
 
+            /* 클라이언트한테 데이터를 받을 객체 */
+            BufferedReader fromClientBufferedReader = null;
 
-//            serverSocket.bind(new InetSocketAddress(IP, PORT));
-//            System.out.println("Bind Success");
-//            System.out.println(IP + ": " + PORT);
-
+            /* 멀티 접속을 위한 while */
             while (true) {
                 /* accept */
-                clientSocket = serverSocket.accept();
+                socket = serverSocket.accept();
 
-                if (socketList.add(clientSocket)) {
-                    BufferedReader bufferedReader = new BufferedReader(new InputStreamReader(clientSocket.getInputStream()));
+                /* 클라이언트가 보낸 거 받기 */
+                fromClientBufferedReader = new BufferedReader(new InputStreamReader(socket.getInputStream()));
 
-                    if (numberOfClient >= 1) {
-                        System.out.println("compare User" + clientList.get(0));
-                        System.out.println("Now user " + numberOfClient);
-                        String compareName = bufferedReader.readLine();
-                        System.out.println("Compare Name : " + compareName);
-                        for (int i = 0; i < clientList.size(); i++) {
-                            if (compareName == clientList.get(i)) {
-                                try {
-                                    System.out.println("Exec~~~");
-//                                    Whisper w = (Whisper) Naming.lookup("rmi://localhost:1099/whisper");
-//                                    w.setCheckValue(true);
-                                } catch (Exception nbe) {
-                                    System.out.println("error : " + nbe);
-                                }
-                            }
-                        }
-                    }
+                /* 클라이언트의 이름 받기 */
+                String nickname = fromClientBufferedReader.readLine();
 
-                    clientList.add(bufferedReader.readLine());
-                    System.out.println("Client enter!!!!!!!!!!!!" + clientList.get(numberOfClient));
-                    numberOfClient++;
+                /* client info */
+                System.out.println("Connected Client: " + nickname);
+                System.out.println("Host: " + socket.getInetAddress().getHostAddress());
 
-
-                    new Thread() {
-                        @Override
-                        public void run() {
-                            BufferedReader bufferedReader = null;
-                            try {
-                                bufferedReader = new BufferedReader(new InputStreamReader(clientSocket.getInputStream()));
-                                while (true) {
-
-                                    String clientMessage = bufferedReader.readLine();
-
-                                    if (clientMessage.trim().length() > 0) {
-                                        TestServer.this.spreadMessage(clientMessage);
-                                    }
-
-                                    if (clientMessage.contains("out ")) {
-                                        System.out.println("clear bufferLeader");
-                                        break;
-                                    }
-                                }
-                            } catch (Exception e) {
-                                System.out.println(e + "=>server run");
-                            } finally {
-                                try {
-                                    bufferedReader.close();
-                                } catch (IOException e) {
-                                    System.out.println(e + "=> ");
-                                }
-                            }
-                        }
-
-                    }.start(); // exec Thread
+                if (socketList.add(socket)) {
+                    clientList.add(nickname);
+                    sendMessage(String.valueOf(clientList));
+                    sendMessage("[System]: " + clientList.get(clientList.size()-1) + "님이 입장하셨습니다.\n");
+                    new Thread(new receiveThread()).start();
 
                 }
+//                System.out.println("Client List: " + clientList);
             }
 
         } catch (Exception e) {
@@ -100,94 +61,63 @@ public class TestServer {
         }
     }
 
-    public void spreadMessage(String message) {
+    class receiveThread implements Runnable {
+        @Override
+        public void run() {
+            // 클라이언트가 보낸 메세지 읽을 객체
+            BufferedReader bufferedReader = null;
+
+            try {
+                // 클라이언트가 보낸 메세지
+                bufferedReader = new BufferedReader(new InputStreamReader(socket.getInputStream()));
+
+                while (true) {
+                    /* 클라이언트 메세지 읽기 */
+                    String clientMessage = bufferedReader.readLine();
+                    if (clientMessage.trim().length() > 0) {
+                        /* 읽은 메세지 서버가 전달 */
+                        TestServer.this.sendMessage(emoji(clientMessage));
+                    }
+                }
+            } catch (Exception e) {
+                System.out.println("still server run");
+            }
+        }
+    }
+
+    public void sendMessage(String message) {
         for (int i = socketList.size() - 1; i > -1; i--) {
             try {
-                if (!socketList.get(i).isClosed()) {
+                if (socketList.get(i).isClosed()) {
+                    socketList.remove(i);
+                } else {
+                    /* 데이터 보내기 */
                     BufferedWriter bufferedWriter = new BufferedWriter(
                             new OutputStreamWriter(socketList.get(i).getOutputStream()));
                     bufferedWriter.write(message);
                     bufferedWriter.newLine();
                     bufferedWriter.flush();
-                } else {
-                    socketList.remove(i);
                 }
-
             } catch (Exception e) {
-                System.out.println("Socket error");
+                System.out.println("sendMessage Error");
             }
         }
     }
 
-    public static void main(String[] args) throws UnknownHostException {
-        boolean connect = false;
-        BufferedReader in = new BufferedReader(new InputStreamReader(System.in));
-        PrintStream out = System.out;
-        new TestServer();
+    public String emoji(String message){
+        /* 이모티콘 유니코드 정보
+         * https://apps.timwhitlock.info/emoji/tables/unicode
+         */
+        message = message.replace(":)", new String(Character.toChars(0x1F603)));
+        message = message.replace(":D", new String(Character.toChars(0x1F604)));
+        message = message.replace(">_<", new String(Character.toChars(0x1F606)));
+        message = message.replace(":(", new String(Character.toChars(0x1F61E)));
+        message = message.replace("(하트)", new String(Character.toChars(0x1F60D)));
+        message = message.replace("(메롱)", new String(Character.toChars(0x1F61D)));
+        return message;
+    }
+
+    public static void main(String[] args) throws IOException {
+        new ChatServer();
     }
 }
-
-/*			w = new BufferedWriter(new OutputStreamWriter(c.getOutputStream()));
-			r = new BufferedReader(new InputStreamReader(c.getInputStream()));
-
-			String m = null;
-
-			while ((m = r.readLine()) != null) {
-				out.println(m);
-				m = in.readLine();
-				w.write(m, 0, m.length());
-				w.newLine();
-				w.flush();
-			}
-			w.close();
-			r.close();
-			c.close();
-		} catch (IOException io) {
-			try {
-				w.close();
-				r.close();
-				c.close();
-
-			}  catch (IOException i) {
-			} */
-
-//    public static void main(String[] args) throws IOException {
-//
-//        try {
-//
-//
-//            ServerSocket serverSocket = new ServerSocket(PORT);
-//
-//
-//
-//            /* binding */
-//            serverSocket.bind(new InetSocketAddress(IP, PORT));
-//            System.out.println("Bind Success");
-//            System.out.println(IP + ": " + PORT);
-//
-//            /* client accept */
-//            Socket clientSocket = serverSocket.accept();
-//
-//            /* connected */
-//            InetSocketAddress remoteSocketIp = (InetSocketAddress) clientSocket.getRemoteSocketAddress();
-//            int remoteHostPort = remoteSocketIp.getPort();
-//            System.out.println("Connected!");
-//            System.out.println(remoteSocketIp + ": " + remoteHostPort);
-//
-//            OutputStream outputStream = clientSocket.getOutputStream();
-//
-//            String sendDataString = "Hello Server";
-//            outputStream.write(sendDataString.getBytes());
-//
-//            serverSocket.close();
-//            clientSocket.close();
-//        } catch (SocketException e) {
-//            e.printStackTrace();
-//        } catch (UnknownHostException e) {
-//            e.printStackTrace();
-//        } catch (IOException e) {
-//            e.printStackTrace();
-//        }
-//
-//    }
-//}

@@ -10,14 +10,16 @@ import org.json.simple.JSONObject;
 import org.json.simple.parser.JSONParser;
 import org.json.simple.parser.ParseException;
 
-
 public class Translate {
     public static String translate(String pmessage) throws ParseException {
-        String clientId = "xIvNWA9wZAWV32E34ttK";//애플리케이션 클라이언트 아이디값";
-        String clientSecret = "ZLKx5j7wef";//애플리케이션 클라이언트 시크릿값";
+        /* 애플리케이션 클라이언트 아이디 값 */
+        String clientId = "xIvNWA9wZAWV32E34ttK";
+
+        /* 애플리케이션 클라이언트 시크릿 값 */
+        String clientSecret = "ZLKx5j7wef";
         String apiURL = "https://openapi.naver.com/v1/papago/n2mt";
         String text;
-        ArrayList<String> res = new ArrayList<>();
+
         try {
             text = URLEncoder.encode(pmessage, "UTF-8");
         } catch (UnsupportedEncodingException e) {
@@ -27,7 +29,7 @@ public class Translate {
         requestHeaders.put("X-Naver-Client-Id", clientId);
         requestHeaders.put("X-Naver-Client-Secret", clientSecret);
         String responseBody = post(apiURL, requestHeaders, text);
-//        System.out.println(responseBody);
+
         requestHeaders = new HashMap<>();
         requestHeaders.put("X-Naver-Client-Id", clientId);
         requestHeaders.put("X-Naver-Client-Secret", clientSecret);

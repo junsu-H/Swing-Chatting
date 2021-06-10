@@ -1,158 +1,180 @@
-package client;//package Client;
+package client;
 
-import java.awt.event.KeyAdapter;
-import java.awt.event.KeyEvent;
-import java.awt.event.WindowAdapter;
-import java.awt.event.WindowEvent;
-import java.io.BufferedReader;
-import java.io.BufferedWriter;
-import java.io.IOException;
-import java.io.InputStreamReader;
-import java.io.OutputStreamWriter;
+import util.Translate;
+
+import javax.swing.*;
+import java.awt.*;
+import java.awt.event.*;
+import java.io.*;
 import java.net.Socket;
-import javax.swing.JFrame;
-import javax.swing.JOptionPane;
-import javax.swing.JScrollPane;
-import javax.swing.JTextArea;
-import javax.swing.JTextField;
 
-public class TestClient {
-	// 프레임 선언
-	public static JFrame jFrame = new JFrame("Chat");
+public class TestClient extends JFrame {
+    private static Font font = new Font("돋움", Font.PLAIN, 15);
+    private static JTextField inputTextField;
+    private static JButton sendBtn;
+    private static JTextArea chatTextArea;
+    private static JTextArea userListTextArea = null;
+    private static JScrollPane userListScroll;
 
-	// Swing에서의 텍스트 영역.. 스크롤바가 존재하지 않는다.
-	JTextArea textArea = new JTextArea("", 0, 0); // 스크롤바 없음
+    private static String[] clientList;
+    private static String nickname;
 
-	// Swing에서 스크롤바를 넣기 위해 아래와 같이 사용한다.
-	JScrollPane jScrollPane = new JScrollPane(textArea); // 스클롤바 만들기
+    private static Socket socket;
+    private static int PORT = 9625;
+    private static String HOST = "localhost";
 
-	// 내용을 입력할 입력창
-	JTextField inputText = new JTextField();
+    public TestClient() throws IOException {
+        setFont(font);
+        setLayout(null);
+        setDefaultCloseOperation(EXIT_ON_CLOSE);
+        setSize(1280, 960);
+        setResizable(false);
 
-	// 소켓
-	static Socket socket;
-	static String name;
-	static boolean checkCondition = false;
-	public static String nameFunc() {
-		jFrame.addWindowListener(new WindowAdapter() {
+        /* 좌측 상단 대화가 보이는 창 */
+        chatTextArea = new JTextArea(10, 10);
+        JScrollPane chatScroll = new JScrollPane(chatTextArea);
+        chatScroll.setBounds(10, 10, 900, 760);
+        chatTextArea.setEnabled(false);
+        this.add(chatScroll);
 
-			@Override
-			public void windowClosing(WindowEvent e) {
-				super.windowClosing(e);
-				sendMessage(name + "님이 퇴장하셨습니다.　　　");
-			}
+        /* 좌측 하단 대화 입력창 */
+        inputTextField = new JTextField(20);
+        inputTextField.setBounds(10, 800, 900, 60);
+        inputTextField.setMargin(new Insets(20, 20, 20, 20));
+        inputTextField.setFont(font);
+        this.add(inputTextField);
 
-		});
+        /* 우측 하단 보내기 버튼 */
+        sendBtn = new JButton("Send");
+        sendBtn.setFont(font);
+        sendBtn.setBounds(1000, 800, 100, 35);
+        this.add(sendBtn);
 
-		try {
-			socket = new Socket("127.0.0.1", 9632);
-		} catch (Exception e) {
-			System.out.println("클라이언트 소켓 생성 에러");
-		}
+        try {
+            socket = new Socket("localhost", PORT);
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
 
-		// 이름설정
-		do {
-			name = JOptionPane.showInputDialog(jFrame, "이름은?");
-			sendMessage(name);
-			try {
-//				Whisper w = (Whisper) Naming.lookup("rmi://localhost:1099/whisper");
-//				checkCondition = w.getCheckValue();
-			}catch(Exception nbe) {
-				System.out.println("error ----->"+nbe);
-			}
-		}while (name == null || name.length() < 2 || checkCondition );
+        this.add(userListTextPane(getNickname()));
 
-		sendMessage(name + "님이 입장하셨습니다.");
-		jFrame.setTitle(name + "님의 채팅창");
-		return name;
-	}
+        new Thread(new ClientThread()).start();
+        clickSendBtn();
+        enterInputTextField();
+        setVisible(true);
+    }
 
-	public TestClient() {
+    public String getNickname() throws IOException {
+        quit();
+        BufferedWriter bufferedWriter = new BufferedWriter((new OutputStreamWriter(socket.getOutputStream())));
+        do {
+            nickname = JOptionPane.showInputDialog("사용할 NICKNAME을 적어주세요.");
+        } while (nickname == null || nickname.length() < 2);
+        sendMessage(nickname);
+        setTitle(nickname + "님의 채팅창");
+        return nickname;
+    }
 
-		textArea.setEnabled(false);
-		textArea.setFocusable(false);
+    class ClientThread implements Runnable {
+        @Override
+        public void run() {
+            BufferedReader serverBufferedReader = null;
 
-		// 텍스트 영역 추가
-		jFrame.add(jScrollPane, "Center");
-		jFrame.add(inputText, "South");
+            try {
+                serverBufferedReader = new BufferedReader(new InputStreamReader(socket.getInputStream()));
+//                clientList = serverBufferedReader.readLine().replace("[", "").replace("]", "").split(", ");
+//                for (String c : clientList) {
+//                    userListTextArea.append("@" + c + "\n");
+//                }
 
-		// 프레임 크기 및 보이기 설정
-		jFrame.setSize(600, 600);
-		jFrame.setVisible(true);
+                while (true) {
+                    String fromServerMessage = serverBufferedReader.readLine();
 
-		// swing에만 있는 X버튼 클릭시 종료
-		jFrame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
+                    if (fromServerMessage != null && fromServerMessage.trim().length() > 0) {
+                        chatTextArea.append(fromServerMessage + "\n");
+                        chatTextArea.append(Translate.translate(fromServerMessage) + "\n");
+                        chatTextArea.setComponentOrientation(ComponentOrientation.LEFT_TO_RIGHT);
 
+                    }
+                }
+            } catch (Exception e) {
+                System.out.println(e + " => client run");
+                e.printStackTrace();
+            } finally {
+                try {
+                    serverBufferedReader.close();
+                    System.out.println("Read Fin");
+                    chatTextArea.append("\n**Read Fin**\n");
+                } catch (IOException e) {
+                    System.out.println(e);
+                }
+            }
+        }
+    }
 
-		nameFunc();
+    /* 우측 상단 유저 목록 */
+    public JTextArea userListTextPane(String nickname) throws IOException {
+        userListTextArea = new JTextArea();
+        userListScroll = new JScrollPane(userListTextArea);
+        userListScroll.setBounds(930, 10, 300, 760);
+        userListScroll.setFont(font);
+        userListTextArea.setBounds(930, 10, 300, 760);
+        userListTextArea.setFont(font);
+        userListTextArea.setMargin(new Insets(20, 20, 20, 20));
+        userListTextArea.setEditable(false);
+        userListTextArea.setVisible(true);
+//        BufferedReader bufferedReader = new BufferedReader(new InputStreamReader(socket.getInputStream()));
+//        userListTextArea.append("@" + bufferedReader.readLine());
+        return userListTextArea;
+    }
 
+    public static void clickSendBtn() {
+        sendBtn.addActionListener(new ActionListener() {
+            @Override
+            public void actionPerformed(ActionEvent e) {
+                if (inputTextField.getText().trim().length() > 0) {
+                    sendMessage(nickname + ": " + inputTextField.getText().trim() + "\n");
+                    inputTextField.setText(null);
+                }
+            }
+        });
+    }
 
-		new Thread() {
-			@Override
-			public void run() {
-				BufferedReader bufferedReader = null;
+    public static void enterInputTextField() {
+        inputTextField.addActionListener(new ActionListener() {
+            public void actionPerformed(ActionEvent e) {
+                if (inputTextField.getText().trim().length() > 0) {
+                    sendMessage(nickname + ": " + inputTextField.getText().trim() + "\n");
+                    inputTextField.setText(null);
+                }
+            }
+        });
+    }
 
-				try {
-					bufferedReader = new BufferedReader(new InputStreamReader(socket.getInputStream()));
-					while (true) {
-						// 클라이언트로부터 메시지 입력받음
-						String clientMessage = bufferedReader.readLine();
+    public void quit() {
+        addWindowListener(new WindowAdapter() {
+            @Override
+            public void windowClosing(WindowEvent e) {
+                super.windowClosing(e);
+//                userListTextArea.append(String.valueOf(ChatServer.clientList));
+//                clientList.remove(nickname);
+                sendMessage("[System]: " + nickname + "님이 퇴장하셨습니다.");
+            }
 
-						if (clientMessage != null && clientMessage.trim().length() > 0) {
-							textArea.append(clientMessage + "\n");
-							textArea.setCaretPosition(textArea.getText().length());
-						}
-					}
-				} catch (Exception e) {
-					System.out.println(e + "=>clinet run");
-					e.printStackTrace();
-				} finally {
-					// 읽어오기 종료
-					try {
-						bufferedReader.close();
-						textArea.append("\n**읽어오기 종료**\n");
-					} catch (IOException e) {
-						System.out.println(e);
-					}
-				}
-			}
+        });
+    }
 
-		}.start(); // 스레드 실행
+    public static void sendMessage(String message) {
+        try {
+            BufferedWriter bufferedWriter = new BufferedWriter(new OutputStreamWriter(socket.getOutputStream()));
+            bufferedWriter.write(message);
+            bufferedWriter.newLine();
+            bufferedWriter.flush();
 
-		inputText.addKeyListener(new KeyAdapter() {
+        } catch (Exception sendError) {
+            System.out.println("메시지 전송 에러 : " + sendError);
+        }
 
-			@Override
-			public void keyReleased(KeyEvent e) {
-				if (e.getKeyCode() == 10) {
-					if (inputText.getText().trim().length() > 0) {
-						sendMessage(name + " : " + inputText.getText().trim());
-						inputText.setText(null);
-					}
-				}
-			}
+    }
 
-		});
-
-	}
-
-	public static void sendMessage(String message) {
-		try {
-			// 클라이언트에게 보내기 위한 준비
-			BufferedWriter bufferedWriter = new BufferedWriter(new OutputStreamWriter(socket.getOutputStream()));
-
-			//최초 메세지 전송 시 Server에 Client의 name 전송
-
-			bufferedWriter.write(message);
-			bufferedWriter.newLine();
-			bufferedWriter.flush();
-
-		} catch (Exception sendError) {
-			System.out.println("메시지 전송 에러 : " + sendError);
-		}
-
-	}
-
-	public static void main(String[] args) throws IOException {
-		new TestClient();
-	}
 }
