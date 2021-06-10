@@ -51,6 +51,8 @@ public class StressClient extends JFrame {
     private JList userList = new JList();
     private JList roomList = new JList();
 
+    private JScrollPane chatScroll;
+
 
     private JButton sendBtn = new JButton("전송");
     private JButton noteBtn = new JButton("쪽지 보내기");
@@ -65,9 +67,17 @@ public class StressClient extends JFrame {
         new StressClient();
     }
 
-    public StressClient() {
-        nickname = JOptionPane.showInputDialog("사용할 NICKNAME을 적어주세요.");
+    public void inputDialogNickname() {
+        do {
+            nickname = JOptionPane.showInputDialog("2글자 이상 사용할 NICKNAME을 적어주세요.");
+        } while (nickname == null || nickname.length() < 2);
         setTitle(nickname + "님의 채팅창");
+    }
+
+    public StressClient() {
+        inputDialogNickname();
+//        nickname = JOptionPane.showInputDialog("사용할 NICKNAME을 적어주세요.");
+//        setTitle(nickname + "님의 채팅창");
         createSocket();
         setFont(font);
         setLayout(null);
@@ -82,7 +92,7 @@ public class StressClient extends JFrame {
         /* 좌측 상단 대화가 보이는 창 */
         /* 가로 600 세로 450 */
         chatTextArea = new JTextArea(10, 10);
-        JScrollPane chatScroll = new JScrollPane(chatTextArea);
+        chatScroll = new JScrollPane(chatTextArea);
         chatScroll.setBounds(10, 10, 600, 450);
         chatTextArea.setEnabled(false);
         pane.add(chatScroll);
@@ -134,6 +144,7 @@ public class StressClient extends JFrame {
         userList.setListData(userVector);
         clickSendBtn();
         enterInputTextField();
+        quit();
     }
 
 
@@ -156,7 +167,7 @@ public class StressClient extends JFrame {
 //        dataInputStream = new DataInputStream(socket.getInputStream());
 //        dataOutputStream = new DataOutputStream(socket.getOutputStream());
 
-        bufferedWriter = new BufferedWriter(new OutputStreamWriter(socket.getOutputStream()));
+        bufferedWriter = new BufferedWriter(new OutputStreamWriter(socket.getOutputStream(), "UTF-8"));
         bufferedReader = new BufferedReader(new InputStreamReader(socket.getInputStream(), "UTF-8"));
 
         // 처음 접속 시에 ID 전송
@@ -174,7 +185,7 @@ public class StressClient extends JFrame {
 //                        String message = dataInputStream.readUTF();
 
                         String message = bufferedReader.readLine();
-                        System.out.println("receiveMessage: " + message);
+                        System.out.println("3. receiveMessage: " + message);
                         // userVector
                         receiveMessage(message);
                         System.out.println(message);
@@ -195,6 +206,10 @@ public class StressClient extends JFrame {
                     e.printStackTrace();
                 } catch (InvalidKeyException e) {
                     e.printStackTrace();
+                } catch (NoSuchFieldException e) {
+                    e.printStackTrace();
+                } catch (IllegalAccessException e) {
+                    e.printStackTrace();
                 }
 
             }
@@ -202,8 +217,8 @@ public class StressClient extends JFrame {
     }
 
     // 서버로부터 들어오는 모든 메세지
-    public void receiveMessage(String pMessage) throws ParseException, NoSuchAlgorithmException, InvalidAlgorithmParameterException, NoSuchPaddingException, IllegalBlockSizeException, BadPaddingException, InvalidKeyException, UnsupportedEncodingException {
-        tokenizer = new StringTokenizer(pMessage, "/");
+    public void receiveMessage(String pMessage) throws ParseException, NoSuchAlgorithmException, InvalidAlgorithmParameterException, NoSuchPaddingException, IllegalBlockSizeException, BadPaddingException, InvalidKeyException, UnsupportedEncodingException, NoSuchFieldException, IllegalAccessException {
+        tokenizer = new StringTokenizer(pMessage, "?");
         String protocol = tokenizer.nextToken();
         String secondParam = tokenizer.nextToken();
 
@@ -217,9 +232,11 @@ public class StressClient extends JFrame {
             String message = tokenizer.nextToken();
 //            chatTextArea.append(secondParam +  ": " + message);
             String decryptMessage = AESUtil.messageDecrypt("aes/ofb/nopadding", AESUtil.messageKey, AESUtil.messageIv, message);
+            System.out.println("4. append decryptMessage: "  + decryptMessage);
 //            System.out.println("decryptMessage: " + decryptMessage);
             chatTextArea.append(secondParam + ": " + decryptMessage + "\n");
             chatTextArea.append(secondParam + ": " + Translate.translate(decryptMessage) + "\n");
+            chatScroll.getVerticalScrollBar().setValue(chatScroll.getVerticalScrollBar().getMaximum());
         } else if (protocol.equals("oldUser")) {
             userVector.add(secondParam.trim());
         } else if (protocol.equals("note")) {
@@ -245,6 +262,11 @@ public class StressClient extends JFrame {
         } else if (protocol.equals("joinRoom")) {
             myRoom = secondParam;
             JOptionPane.showMessageDialog(null, myRoom + " 채팅방에 입장했습니다.", "알림", JOptionPane.INFORMATION_MESSAGE);
+        } else if (protocol.equals("quit")) {
+            userVector.remove(secondParam);
+            userList.setListData(userVector);
+            chatTextArea.append("[System] " + secondParam + "님이 나갔습니다.");
+
         }
     }
 
@@ -277,8 +299,8 @@ public class StressClient extends JFrame {
     private void encryptSendMessage() {
         try {
             String encryptMessage = AESUtil.messageEncrypt("aes/ofb/nopadding", AESUtil.messageKey, AESUtil.messageIv, inputTextField.getText().trim());
-            sendMessage("chatting/" + myRoom + "/" + encryptMessage);
-            System.out.println("encryptSendMessage: " + encryptMessage);
+            System.out.println("1. Client의 encryptSendMessage: " + encryptMessage);
+            sendMessage("chatting?" + myRoom + "?" + encryptMessage);
 
 //            sendMessage("chatting/" + myRoom + "/" + inputTextField.getText().trim());
 //            System.out.println("chatting/" + myRoom + "/" + inputTextField.getText().trim());
@@ -296,6 +318,10 @@ public class StressClient extends JFrame {
         } catch (IllegalBlockSizeException illegalBlockSizeException) {
             illegalBlockSizeException.printStackTrace();
         } catch (UnsupportedEncodingException e) {
+            e.printStackTrace();
+        } catch (NoSuchFieldException e) {
+            e.printStackTrace();
+        } catch (IllegalAccessException e) {
             e.printStackTrace();
         }
     }
@@ -328,18 +354,16 @@ public class StressClient extends JFrame {
     }
 
 
-//    public void quit() {
-//        addWindowListener(new WindowAdapter() {
-//            @Override
-//            public void windowClosing(WindowEvent e) {
-//                super.windowClosing(e);
-////                userListTextArea.append(String.valueOf(ChatServer.clientList));
-////                clientList.remove(nickname);
-//                sendMessage("[System]: " + nickname + "님이 퇴장하셨습니다.");
-//            }
-//
-//        });
-//    }
-//
+    public void quit() {
+        addWindowListener(new WindowAdapter() {
+            @Override
+            public void windowClosing(WindowEvent e) {
+                super.windowClosing(e);
+                sendMessage("quit?" + nickname);
+            }
+
+        });
+    }
+
 
 }

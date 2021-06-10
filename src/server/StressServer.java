@@ -100,22 +100,22 @@ public class StressServer {
 
                 System.out.println("이것이 nickname이다: " + nickname);
 
-                broadCast("newUser/" + nickname);                 // 자신에게 기존 사용자를 알림
+                broadCast("newUser?" + nickname);                 // 자신에게 기존 사용자를 알림
 
                 // 자신에게 기존 사용자를 받아오는 부분
                 for (int i = 0; i < userVector.size(); i++) {
                     UserInfo userInfo = (UserInfo) userVector.elementAt(i);
-                    sendMessage("oldUser/" + userInfo.nickname);
+                    sendMessage("oldUser?" + userInfo.nickname);
                 }
                 userVector.add(this);
-                broadCast("userListUpdate/null");
+                broadCast("userListUpdate?null");
 
-                sendMessage("roomListUpdate/null");
+                sendMessage("roomListUpdate?null");
 
                 // 자신에게 기존 방 목록을 받아오는 부분
                 for (int i = 0; i < roomVector.size(); i++) {
                     RoomInfo roomInfo = (RoomInfo) roomVector.elementAt(i);
-                    sendMessage("oldRoom/" + roomInfo.roomName);
+                    sendMessage("oldRoom?" + roomInfo.roomName);
                 }
             } catch (IOException e) {
 //                try {
@@ -132,38 +132,43 @@ public class StressServer {
 
         // 클라이언트로부터 들어오는 메세지 처리
         private void receiveMessage(String pMessage) {
-            tokenizer = new StringTokenizer(pMessage, "/");
+            tokenizer = new StringTokenizer(pMessage, "?");
 
             String protocol = tokenizer.nextToken();
-            String message = tokenizer.nextToken();
+            String secondParam = tokenizer.nextToken();
 
             System.out.println("프로토콜: " + protocol);
-            System.out.println("메세지: " + message);
+            System.out.println("메세지: " + secondParam);
 
             if (protocol.equals("chatting")) {
                 String msg = tokenizer.nextToken();
-                broadCast("chatting/" + nickname + "/" + msg);
+                broadCast("chatting?" + nickname + "?" + msg);
+                System.out.println("2. Server의 broadCast encryptSendMessage: " + msg);
+
 //                sendMessage("chatting/" + nickname + "/" + msg);
                 for (int i = 0; i < roomVector.size(); i++) {
                     RoomInfo roomInfo = (RoomInfo) roomVector.elementAt(i);
-                    sendMessage("chatting/" + nickname + "/" + msg);
-                    roomInfo.broadCastRoom("chatting/" + nickname + "/" + msg);
-                    System.out.println("클라이언트로 보내는 메세지: chatting/" + nickname + "/" + msg);
+                    sendMessage("chatting?" + nickname + "?" + msg);
+                    roomInfo.broadCastRoom("chatting?" + nickname + "?" + msg);
+                    System.out.println("클라이언트로 보내는 메세지: chatting?" + nickname + "?" + msg);
                 }
-            } else if (protocol.equals("note")) {
-                tokenizer = new StringTokenizer(message, "@");
+            } else if (protocol.equals("quit")) {
+                broadCast("quit?" + secondParam);
+            }
+            else if (protocol.equals("note")) {
+                tokenizer = new StringTokenizer(secondParam, "@");
 
                 String user = tokenizer.nextToken();
                 String note = tokenizer.nextToken();
 
-                System.out.println("받는 사람: " + message);
+                System.out.println("받는 사람: " + secondParam);
                 System.out.println("보낼 내용: " + note);
                 // 벡터에서 해당 사용자를 찾아서 전송
 
                 for (int i = 0; i < userVector.size(); i++) {
                     UserInfo userInfo = (UserInfo) userVector.elementAt(i);
                     if (userInfo.nickname.equals(user)) {
-                        userInfo.sendMessage("note/" + nickname + "@" + note);
+                        userInfo.sendMessage("note?" + nickname + "@" + note);
                     }
                 }
             } // if 끝
@@ -172,18 +177,18 @@ public class StressServer {
                 for (int i = 0; i < roomVector.size(); i++) {
                     RoomInfo roomInfo = (RoomInfo) roomVector.elementAt(i);
 
-                    if (roomInfo.roomName.equals(message)) {
-                        sendMessage("createRoomFail/ok");
+                    if (roomInfo.roomName.equals(secondParam)) {
+                        sendMessage("createRoomFail?ok");
                         roomCheck = false;
                         break;
                     }
                 } // for 끝
 
                 if (roomCheck) {
-                    RoomInfo roomInfo = new RoomInfo(message, this);
+                    RoomInfo roomInfo = new RoomInfo(secondParam, this);
                     roomVector.add(roomInfo);
-                    sendMessage("createRoom/" + message);
-                    broadCast("newRoom/" + message);
+                    sendMessage("createRoom?" + secondParam);
+                    broadCast("newRoom?" + secondParam);
                 }
 
                 roomCheck = true;
@@ -191,11 +196,11 @@ public class StressServer {
             } else if (protocol.equals("joinRoom")) {
                 for (int i = 0; i < roomVector.size(); i++) {
                     RoomInfo roomInfo = (RoomInfo) roomVector.elementAt(i);
-                    if (roomInfo.roomName.equals(message)) {
-                        roomInfo.broadCastRoom("chatting/system/[System] " + nickname + "님이 입장하셨습니다.");
+                    if (roomInfo.roomName.equals(secondParam)) {
+                        roomInfo.broadCastRoom("chatting?system?[System] " + nickname + "님이 입장하셨습니다.");
                         // 사용자 추가
                         roomInfo.addUser(this);
-                        sendMessage("joinRoom/" + message);
+                        sendMessage("joinRoom?" + secondParam);
                     }
                 }
             }
@@ -210,7 +215,7 @@ public class StressServer {
         public void sendMessage(String message) {
             try {
                 /* 데이터 보내기 */
-                BufferedWriter bufferedWriter = new BufferedWriter(new OutputStreamWriter(socket.getOutputStream()));
+                BufferedWriter bufferedWriter = new BufferedWriter(new OutputStreamWriter(socket.getOutputStream(), "UTF-8"));
                 bufferedWriter.write(message);
                 bufferedWriter.newLine();
                 bufferedWriter.flush();

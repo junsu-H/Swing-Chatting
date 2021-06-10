@@ -9,7 +9,7 @@ import java.io.*;
 import java.net.Socket;
 
 public class ChatClient extends JFrame {
-    private static Font font = new Font("바탕", Font.PLAIN, 15);
+    private static Font font = new Font("돋움", Font.PLAIN, 15);
     private static JTextField inputTextField;
     private static JButton sendBtn;
     private static JTextArea chatTextArea;
