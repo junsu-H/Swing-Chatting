@@ -90,7 +90,7 @@ public class LoginGui extends JFrame {
                     member.setPassword(String.valueOf(pwTextField.getPassword()));
 
                     String encryptedPassword = dao.findByPassword(member);
-                    String decryptedPassword = AESUtil.decrypt(encryptedPassword, AESUtil.dbIv);
+                    String decryptedPassword = AESUtil.decrypt(AESUtil.cbc, AESUtil.dbIv, encryptedPassword);
 
                     if (member.getPassword().equals(decryptedPassword)) {
                         JOptionPane.showMessageDialog(null, "로그인 되었습니다. 채팅을 시작합니다.");

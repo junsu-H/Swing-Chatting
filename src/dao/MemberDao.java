@@ -127,7 +127,7 @@ public class MemberDao {
             keyGenerator.init(128, secureRandom);
 
             String password = member.getPassword();
-            String encrypted = AESUtil.encrypt(password, AESUtil.dbIv);
+            String encrypted = AESUtil.encrypt(AESUtil.cbc, AESUtil.dbIv, password);
             pstmt.setString(2, encrypted);
             pstmt.executeUpdate();
             return 1;

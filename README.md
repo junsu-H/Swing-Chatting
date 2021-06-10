@@ -12,7 +12,7 @@ create table `chatting`.`member`(
     id INT(11) AUTO_INCREMENT  NOT NULL,
     email VARCHAR(30) NOT NULL,
     password VARCHAR(100) NOT NULL,
-    nickname VARCHAR(10) NOT NULL,
+    nickname VARCHAR(10) NULL,
     create_date  TIMESTAMP NOT NULL DEFAULT NOW(),
     PRIMARY KEY (id),
     UNIQUE KEY (email)

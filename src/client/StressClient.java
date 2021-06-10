@@ -188,7 +188,6 @@ public class StressClient extends JFrame {
                         System.out.println("3. receiveMessage: " + message);
                         // userVector
                         receiveMessage(message);
-                        System.out.println(message);
                     }
                 } catch (IOException e) {
                     e.printStackTrace();
@@ -231,9 +230,13 @@ public class StressClient extends JFrame {
         } else if (protocol.equals("chatting")) {
             String message = tokenizer.nextToken();
 //            chatTextArea.append(secondParam +  ": " + message);
-            String decryptMessage = AESUtil.messageDecrypt("aes/ofb/nopadding", AESUtil.messageKey, AESUtil.messageIv, message);
+
+            // 여기가 에러남.
+            String decryptMessage = AESUtil.decrypt(AESUtil.ofb, AESUtil.messageIv, message);
             System.out.println("4. append decryptMessage: "  + decryptMessage);
+
 //            System.out.println("decryptMessage: " + decryptMessage);
+//            chatTextArea.append(message);
             chatTextArea.append(secondParam + ": " + decryptMessage + "\n");
             chatTextArea.append(secondParam + ": " + Translate.translate(decryptMessage) + "\n");
             chatScroll.getVerticalScrollBar().setValue(chatScroll.getVerticalScrollBar().getMaximum());
@@ -298,7 +301,7 @@ public class StressClient extends JFrame {
 
     private void encryptSendMessage() {
         try {
-            String encryptMessage = AESUtil.messageEncrypt("aes/ofb/nopadding", AESUtil.messageKey, AESUtil.messageIv, inputTextField.getText().trim());
+            String encryptMessage = AESUtil.encrypt(AESUtil.ofb, AESUtil.messageIv, inputTextField.getText().trim()).trim();
             System.out.println("1. Client의 encryptSendMessage: " + encryptMessage);
             sendMessage("chatting?" + myRoom + "?" + encryptMessage);
 
@@ -318,10 +321,6 @@ public class StressClient extends JFrame {
         } catch (IllegalBlockSizeException illegalBlockSizeException) {
             illegalBlockSizeException.printStackTrace();
         } catch (UnsupportedEncodingException e) {
-            e.printStackTrace();
-        } catch (NoSuchFieldException e) {
-            e.printStackTrace();
-        } catch (IllegalAccessException e) {
             e.printStackTrace();
         }
     }
