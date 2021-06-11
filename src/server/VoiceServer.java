@@ -17,6 +17,10 @@ public class VoiceServer {
     ServerSocket serverSocket = null;
     Socket clientSocket = null;
 
+//    public static void main(String[] args) {
+//        new VoiceServer();
+//    }
+
     public VoiceServer() {
         String HOST = "";
         try {
@@ -30,9 +34,9 @@ public class VoiceServer {
             System.out.println(HOST + ": " + PORT + " Ready");
             while (true) {
                 clientSocket = serverSocket.accept();
-
-                new Thread(new receiveFromClientThread()).start();
-                new Thread(new sendToClientThread()).start();
+                System.out.println("-------------------start VoiceServer-------------------");
+                new Thread(new receiveVoiceThread()).start();
+                new Thread(new sendVoiceThread()).start();
             }
         } catch (IOException e) {
             System.out.println("socket:" + e);
@@ -57,14 +61,14 @@ public class VoiceServer {
         return new AudioFormat(sampleRate, sampleSizeInBits, channels, signed, bigEndian);
     }
 
-    class receiveFromClientThread implements Runnable {
+    class receiveVoiceThread implements Runnable {
         @Override
         public void run() {
             AudioFormat format = null;
-
-            /* https://docs.oracle.com/javase/7/docs/api/javax/sound/sampled/DataLine.Info.html#:~:text=public%20static%20class%20DataLine.Info,sizes%20of%20its%20internal%20buffer
-
+            /*
+            https://docs.oracle.com/javase/7/docs/api/javax/sound/sampled/DataLine.Info.html#:~:text=public%20static%20class%20DataLine.Info,sizes%20of%20its%20internal%20buffer
             */
+
             DataLine.Info info;
             SourceDataLine sourceDataLine;
 
@@ -101,7 +105,7 @@ public class VoiceServer {
         }
     }
 
-    class sendToClientThread implements Runnable {
+    class sendVoiceThread implements Runnable {
         @Override
         public void run() {
 
@@ -137,10 +141,6 @@ public class VoiceServer {
 
 
         }
-    }
-
-    public static void main(String[] args) {
-        new VoiceServer();
     }
 
 }

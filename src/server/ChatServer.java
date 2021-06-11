@@ -38,6 +38,7 @@ public class ChatServer  {
     public ChatServer() throws IOException {
         serverSocket = new ServerSocket(PORT);
         clientAccept();
+        new VoiceServer();
     }
 
     // 클라이언트를 계속 받기 위한 쓰레드
@@ -92,8 +93,8 @@ public class ChatServer  {
                     }
                 }
             } catch (Exception e) {
-                System.out.println("Still Server Run");
                 e.printStackTrace();
+                System.out.println("Still Server Run");
             }
         }
 
@@ -102,18 +103,14 @@ public class ChatServer  {
                 BufferedReader bufferedReader = new BufferedReader(new InputStreamReader(socket.getInputStream(), "UTF-8"));
                 nickname = bufferedReader.readLine(); // 사용자 닉네임 받기
 
-//                dataInputStream = new DataInputStream(StressServer.this.socket.getInputStream());
-//                dataOutputStream = new DataOutputStream(StressServer.this.socket.getOutputStream());
-//                nickname = dataInputStream.readUTF(); // 사용자 닉네임 받기
-
                 System.out.println("이것이 nickname이다: " + nickname);
 
-                broadCast("newUser?" + nickname);                 // 자신에게 기존 사용자를 알림
+                /* nickname 정보 뿌리기 */
+                broadCast("newUser?" + nickname);
 
-                // 자신에게 기존 사용자를 받아오는 부분
                 for (int i = 0; i < userVector.size(); i++) {
                     UserInfo userInfo = (UserInfo) userVector.elementAt(i);
-                    sendMessage("oldUser?" + userInfo.nickname);
+                    sendMessage("newUser?" + userInfo.nickname);
                 }
                 userVector.add(this);
                 broadCast("userListUpdate?null");
@@ -126,20 +123,17 @@ public class ChatServer  {
                     sendMessage("oldRoom?" + roomInfo.roomName);
                 }
             } catch (IOException e) {
-//                try {
-////                    dataInputStream.close();
-////                    dataOutputStream.close();
-//                    bufferedWriter.close();
-//                    bufferedReader.close();
-//                } catch (IOException ioException) {
-//                    ioException.printStackTrace();
-//                }
+                try {
+                    bufferedReader.close();
+                } catch (IOException ioException) {
+                    ioException.printStackTrace();
+                }
                 e.printStackTrace();
             }
         }
 
-        // 클라이언트로부터 들어오는 메세지 처리
-        private void receiveMessage(String pMessage) {
+        /* 클라이언트로부터 들어오는 메세지 처리 */
+        private void receiveMessage(String pMessage) throws IOException {
             tokenizer = new StringTokenizer(pMessage, "?");
 
             String protocol = tokenizer.nextToken();
@@ -147,7 +141,6 @@ public class ChatServer  {
 
             System.out.println("프로토콜: " + protocol);
             System.out.println("메세지: " + secondParam);
-
 
             if (protocol.equals("chatting")) {
                 String message = tokenizer.nextToken();

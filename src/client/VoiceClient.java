@@ -1,7 +1,5 @@
 package client;
 
-import server.VoiceServer;
-
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
@@ -30,47 +28,11 @@ public class VoiceClient {
         } catch (IOException e) {
             e.printStackTrace();
         }
-        new Thread(new receiveThread()).start();
-        new Thread(new sendThread()).start();
+        new Thread(new sendVoiceThread()).start();
+        new Thread(new receiveVoiceThread()).start();
 
     }
-    class receiveThread implements Runnable {
-        @Override
-        public void run() {
-            AudioFormat format;
-            DataLine.Info info;
-            SourceDataLine sourceDataLine;
-
-            InputStream inputStream;
-            try {
-                inputStream = socket.getInputStream();
-
-                int eof;
-                byte[] buffer = new byte[65536];
-                format = getAudioFormat();
-                info = new DataLine.Info(SourceDataLine.class, format);
-                sourceDataLine = (SourceDataLine) AudioSystem.getLine(info);
-                sourceDataLine.open(format);
-                sourceDataLine.start();
-                while ((eof = inputStream.read(buffer, 0, buffer.length)) != -1) {
-                    if (eof > 0) {
-                        System.out.println(eof + " ");
-                        sourceDataLine.write(buffer, 0, eof);
-                        buffer = new byte[65536];
-                    }
-                }
-                sourceDataLine.stop();
-                sourceDataLine.close();
-            } catch (LineUnavailableException e) {
-                e.printStackTrace();
-            } catch (IOException e) {
-                e.printStackTrace();
-            }
-        }
-    }
-
-    class sendThread implements Runnable {
-
+    class sendVoiceThread implements Runnable {
         @Override
         public void run() {
 
@@ -107,5 +69,42 @@ public class VoiceClient {
             }
         }
     }
+
+    class receiveVoiceThread implements Runnable {
+        @Override
+        public void run() {
+            AudioFormat format;
+            DataLine.Info info;
+            SourceDataLine sourceDataLine;
+
+            InputStream inputStream;
+            try {
+                inputStream = socket.getInputStream();
+
+                int eof;
+                byte[] buffer = new byte[65536];
+                format = getAudioFormat();
+                info = new DataLine.Info(SourceDataLine.class, format);
+                sourceDataLine = (SourceDataLine) AudioSystem.getLine(info);
+                sourceDataLine.open(format);
+                sourceDataLine.start();
+                while ((eof = inputStream.read(buffer, 0, buffer.length)) != -1) {
+                    if (eof > 0) {
+                        System.out.println(eof + " ");
+                        sourceDataLine.write(buffer, 0, eof);
+                        buffer = new byte[65536];
+                    }
+                }
+                sourceDataLine.stop();
+                sourceDataLine.close();
+            } catch (LineUnavailableException e) {
+                e.printStackTrace();
+            } catch (IOException e) {
+                e.printStackTrace();
+            }
+        }
+    }
+
+
 }
 	

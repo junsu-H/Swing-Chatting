@@ -8,5 +8,4 @@ public interface AESInterface {
     static String ofb = "AES/OFB/NoPadding";
     static final String messageKey = "dlrp_dkaghghkwl!";
     static final String messageIv = messageKey.substring(0, 16);
-
 }

@@ -1,6 +1,9 @@
 package client;
 
+import gui.LoginGui;
+import interfaces.ChatClientInterface;
 import org.json.simple.parser.ParseException;
+import server.VoiceServer;
 import util.AES;
 import util.Translate;
 
@@ -23,11 +26,7 @@ import java.security.NoSuchAlgorithmException;
 import java.util.StringTokenizer;
 import java.util.Vector;
 
-public class ChatClient extends JFrame {
-    /* HOST, IP */
-    private static final String HOST = "localhost";
-    private static final int PORT = 9625;
-
+public class ChatClient extends JFrame implements ChatClientInterface {
     /* socket */
     private static Socket socket;
     private String nickname;
@@ -38,34 +37,10 @@ public class ChatClient extends JFrame {
     /* 현재 내 방 */
     private String myRoom = "general";
 
-    private static final Font font = new Font("바탕", Font.PLAIN, 15);
-
-    private JPanel pane;
-
-    //    private JTextArea chatTextPane = new JTextArea(10, 10);
-    private JTextPane chatTextPane = new JTextPane();
-
-    SimpleAttributeSet left = new SimpleAttributeSet();
-
-    SimpleAttributeSet right = new SimpleAttributeSet();
-    StyledDocument doc = chatTextPane.getStyledDocument();
-
-
-    private JScrollPane chatScroll = new JScrollPane(chatTextPane);
-    private JTextField inputTextField;
-    private JList userList = new JList();
-    private JList roomList = new JList();
-
-    private JButton sendBtn = new JButton("전송");
-    private JButton noteBtn = new JButton("쪽지 보내기");
-    private JButton createRoomBtn = new JButton("방 만들기");
-    private JButton joinRoomBtn = new JButton("채팅방 참여");
-
     private Vector userVector = new Vector();
     private Vector roomVector = new Vector();
     private StringTokenizer tokenizer;
     private static boolean selfCheck = false;
-
 
     public static void main(String[] args) throws IOException {
         new ChatClient();
@@ -80,19 +55,17 @@ public class ChatClient extends JFrame {
         setSize(800, 600);
         setResizable(false);
 
-        pane = new JPanel();
         pane.setBorder(new EmptyBorder(5, 5, 5, 5));
         setContentPane(pane);
         pane.setLayout(null);
+
         /* 좌측 상단 대화가 보이는 창 */
         /* 가로 600 세로 450 */
-
         chatScroll.setBounds(10, 10, 600, 450);
         chatTextPane.setEnabled(false);
         pane.add(chatScroll);
 
         /* 좌측 하단 대화 입력창 */
-        inputTextField = new JTextField(20);
         inputTextField.setBounds(10, 475, 600, 75);
         inputTextField.setMargin(new Insets(20, 20, 20, 20));
         inputTextField.setFont(font);
@@ -131,13 +104,20 @@ public class ChatClient extends JFrame {
         sendBtn.setBounds(625, 485, 75, 50);
         pane.add(sendBtn);
 
+        voiceBtn.setFont(font);
+        voiceBtn.setBounds(705, 485, 75, 50);
+        pane.add(voiceBtn);
+
         setVisible(true);
 
         userList.setListData(userVector);
         clickSendBtn();
+        clickVoiceBtn();
+        clickNoteBtn();
         enterInputTextField();
         quit();
     }
+
 
     public void inputDialogNickname() {
         do {
@@ -213,7 +193,14 @@ public class ChatClient extends JFrame {
     }
 
     /* 서버가 보내는 메세지 받기 */
-    public void receiveMessage(String pMessage) throws ParseException, NoSuchAlgorithmException, InvalidAlgorithmParameterException, NoSuchPaddingException, IllegalBlockSizeException, BadPaddingException, InvalidKeyException, UnsupportedEncodingException, NoSuchFieldException, IllegalAccessException, BadLocationException {
+    @Override
+    public void receiveMessage(String pMessage) throws ParseException, NoSuchAlgorithmException,
+            InvalidAlgorithmParameterException, NoSuchPaddingException,
+            IllegalBlockSizeException, BadPaddingException,
+            InvalidKeyException, UnsupportedEncodingException,
+            NoSuchFieldException, IllegalAccessException,
+            BadLocationException {
+
         StyleConstants.setAlignment(left, StyleConstants.ALIGN_LEFT);
         StyleConstants.setForeground(left, Color.RED);
 
@@ -229,7 +216,6 @@ public class ChatClient extends JFrame {
         if (protocol.equals("chattingSelf")) {
             selfCheck = true;
         }
-
         if (protocol.equals("chatting")) {
             String message = tokenizer.nextToken();
             String decryptMessage = AES.decrypt(AES.ofb, AES.messageIv, message);
@@ -240,19 +226,17 @@ public class ChatClient extends JFrame {
 //                doc.insertString(doc.getLength(), "(Translate) " + secondParam + ": " + Translate.translate(decryptMessage) + "\n", right);
 
                 selfCheck = false;
-
             } else {
                 doc.setParagraphAttributes(doc.getLength(), 1, left, false);
                 doc.insertString(doc.getLength(), secondParam + ": " + decryptMessage + "\n", left);
                 doc.insertString(doc.getLength(), "(Translate) " + secondParam + ": " + Translate.translate(decryptMessage) + "\n", left);
-
             }
             chatScroll.getVerticalScrollBar().setValue(chatScroll.getVerticalScrollBar().getMaximum());
         }
 
         if (protocol.equals("newUser")) {
+            doc.insertString(doc.getLength(), "[System] " + userVector.get(userVector.size()-1) + "님이 입장하셨습니다.\n", left);
             userVector.add(secondParam.trim());
-            doc.insertString(doc.getLength(), "[System] " + secondParam + "님이 입장하셨습니다.\n", left);
             doc.setParagraphAttributes(doc.getLength(), 1, left, false);
 
 //            chatTextPane.append("[System] " + secondParam + "님이 입장하셨습니다.\n");
@@ -335,9 +319,6 @@ public class ChatClient extends JFrame {
         sendBtn.addActionListener(new ActionListener() {
             @Override
             public void actionPerformed(ActionEvent e) {
-                if (inputTextField.getText().trim().length() > 0) {
-                    encryptSendMessage();
-                }
             }
         });
     }
@@ -353,8 +334,33 @@ public class ChatClient extends JFrame {
         });
     }
 
-    public void clickJoinRoomBtn() {
+    public void clickNoteBtn() {
+        noteBtn.addActionListener(new ActionListener() {
+            @Override
+            public void actionPerformed(ActionEvent e) {
+                if (inputTextField.getText().trim().length() > 0) {
+                    encryptSendMessage();
+                }
+            }
+        });
+    }
 
+    public void clickVoiceBtn() {
+        voiceBtn.addActionListener(new ActionListener() {
+            @Override
+            public void actionPerformed(ActionEvent e) {
+                System.out.println("start VoiceServer");
+                EventQueue.invokeLater(new Runnable() {
+                    public void run() {
+                        try {
+                            new VoiceClient();
+                        } catch (Exception e) {
+                            e.printStackTrace();
+                        }
+                    }
+                });
+            }
+        });
     }
 
 
@@ -364,6 +370,7 @@ public class ChatClient extends JFrame {
             public void windowClosing(WindowEvent e) {
                 super.windowClosing(e);
                 sendMessage("quit?" + nickname);
+
             }
 
         });

@@ -84,7 +84,6 @@ public class RegisterGui extends JFrame implements RegisterInterface {
             public void actionPerformed(ActionEvent e) {
                 UserDao dao = UserDao.getInstance();
                 User user = new User(emailTextField.getText(), pwTextField.getText());
-
                 if (dao.checkEmail(user) == 0) {
                     JOptionPane.showMessageDialog(null, "EMAIL이 중복됩니다.");
                 } else {

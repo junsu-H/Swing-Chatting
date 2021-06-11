@@ -105,7 +105,6 @@ public class LoginGui extends JFrame implements LoginInterface {
                 if (user.getPassword().equals(decryptedPassword)) {
                     JOptionPane.showMessageDialog(null, "로그인 되었습니다. 채팅을 시작합니다.");
                     new ChatClient();
-//                    new StressClient();
                 } else if (dao.findByEmail(user).equals("1")) {
                     JOptionPane.showMessageDialog(null, "EMAIL 혹은 PW가 다릅니다.");
                 } else {
