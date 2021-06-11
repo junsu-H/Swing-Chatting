@@ -1,9 +1,9 @@
 package client;
 
 import gui.LoginGui;
+import gui.VoiceGui;
 import interfaces.ChatClientInterface;
 import org.json.simple.parser.ParseException;
-import server.VoiceServer;
 import util.AES;
 import util.Translate;
 
@@ -38,15 +38,14 @@ public class ChatClient extends JFrame implements ChatClientInterface {
     private String myRoom = "general";
 
     private Vector userVector = new Vector();
-    private Vector roomVector = new Vector();
     private StringTokenizer tokenizer;
     private static boolean selfCheck = false;
 
-    public static void main(String[] args) throws IOException {
+    public static void main(String[] args) throws IOException, BadLocationException {
         new ChatClient();
     }
 
-    public ChatClient() {
+    public ChatClient() throws BadLocationException {
         inputDialogNickname();
         createSocket();
         setFont(font);
@@ -71,42 +70,24 @@ public class ChatClient extends JFrame implements ChatClientInterface {
         inputTextField.setFont(font);
         pane.add(inputTextField);
 
-        JLabel clientLabel = new JLabel("Client List");
-        clientLabel.setBounds(625, 10, 75, 15);
-        pane.add(clientLabel);
-
         /* 우측 상단 목록 */
-        userList.setBounds(625, 30, 125, 150);
-        pane.add(userList);
+        userListScrollPane.setBounds(625, 30, 135, 300);
+        pane.add(userListScrollPane);
 
         /* 우측 중단 쪽지 보내기 */
         noteBtn.setFont(font);
-        noteBtn.setBounds(625, 185, 125, 30);
+        noteBtn.setBounds(625, 335, 135, 30);
         pane.add(noteBtn);
 
-        JLabel roomLabel = new JLabel("Room List");
-        roomLabel.setBounds(625, 220, 75, 15);
-        pane.add(roomLabel);
-
-        roomList.setBounds(625, 240, 125, 150);
-        pane.add(roomList);
-
-        createRoomBtn.setFont(font);
-        createRoomBtn.setBounds(625, 395, 125, 30);
-        pane.add(createRoomBtn);
-
-        joinRoomBtn.setFont(font);
-        joinRoomBtn.setBounds(625, 430, 125, 30);
-        pane.add(joinRoomBtn);
+        /* Voice */
+        voiceBtn.setFont(font);
+        voiceBtn.setBounds(625, 400, 135, 50);
+        pane.add(voiceBtn);
 
         /* 우측 하단 보내기 버튼 */
         sendBtn.setFont(font);
-        sendBtn.setBounds(625, 485, 75, 50);
+        sendBtn.setBounds(625, 485, 135, 50);
         pane.add(sendBtn);
-
-        voiceBtn.setFont(font);
-        voiceBtn.setBounds(705, 485, 75, 50);
-        pane.add(voiceBtn);
 
         setVisible(true);
 
@@ -126,7 +107,7 @@ public class ChatClient extends JFrame implements ChatClientInterface {
         setTitle(nickname + "님의 채팅창");
     }
 
-    public void createSocket() {
+    public void createSocket() throws BadLocationException {
         try {
             socket = new Socket(HOST, PORT);
         } catch (Exception e) {
@@ -136,7 +117,7 @@ public class ChatClient extends JFrame implements ChatClientInterface {
         }
     }
 
-    public void connect() {
+    public void connect() throws BadLocationException {
         try {
             bufferedWriter = new BufferedWriter(new OutputStreamWriter(socket.getOutputStream(), "UTF-8"));
             bufferedReader = new BufferedReader(new InputStreamReader(socket.getInputStream(), "UTF-8"));
@@ -146,7 +127,7 @@ public class ChatClient extends JFrame implements ChatClientInterface {
 
         /* nickname server로 전송 */
         sendMessage(nickname);
-
+        doc.insertString(doc.getLength(), "[System] " + nickname + "님이 입장하셨습니다.\n", left);
         /* userVector 추가 */
         userVector.add(nickname);
 
@@ -231,48 +212,24 @@ public class ChatClient extends JFrame implements ChatClientInterface {
                 doc.insertString(doc.getLength(), "(Translate) " + secondParam + ": " + Translate.translate(decryptMessage) + "\n", left);
             }
             chatScroll.getVerticalScrollBar().setValue(chatScroll.getVerticalScrollBar().getMaximum());
-        }
-
-        if (protocol.equals("newUser")) {
-            doc.setParagraphAttributes(doc.getLength(), 1, left, false);
-            doc.insertString(doc.getLength(), "[System] " + userVector.get(userVector.size()-1) + "님이 입장하셨습니다.\n", left);
+        } else if (protocol.equals("newUser")) {
             userVector.add(secondParam.trim());
-
-//            chatTextPane.append("[System] " + secondParam + "님이 입장하셨습니다.\n");
+            doc.setParagraphAttributes(doc.getLength(), 1, left, false);
+            doc.insertString(doc.getLength(), "[System] " + secondParam + "님이 입장하셨습니다.\n", left);
         } else if (protocol.equals("oldUser")) {
             userVector.add(secondParam.trim());
-
-//            chatTextPane.append("[System] " + secondParam + "님이 입장하셨습니다.\n");
         } else if (protocol.equals("userListUpdate")) {
             userList.setListData(userVector);
         } else if (protocol.equals("note")) {
-            tokenizer = new StringTokenizer(secondParam, "@");
+            tokenizer = new StringTokenizer(secondParam, "?");
             String user = tokenizer.nextToken();
             String note = tokenizer.nextToken();
             System.out.println(user + "사용자로부터 온 쪽지 " + note);
             JOptionPane.showMessageDialog(null, note, user + "님으로부터 온 쪽지", JOptionPane.CLOSED_OPTION);
-
-        } else if (protocol.equals("createRoom")) { // 새로운 방 만들었을 때
-            myRoom = secondParam;
-        } else if (protocol.equals("createRoomFail")) { // 방 만들기 실패
-            JOptionPane.showMessageDialog(null, "방 만들기 실패", "알림", JOptionPane.CLOSED_OPTION);
-        } else if (protocol.equals("newRoom")) {
-            roomVector.add(secondParam);
-            roomList.setListData(roomVector);
-
-        } else if (protocol.equals("oldRoom")) {
-            roomVector.add(secondParam);
-        } else if (protocol.equals("roomListUpdate")) {
-            roomList.setListData(roomVector);
-        } else if (protocol.equals("joinRoom")) {
-            myRoom = secondParam;
-            JOptionPane.showMessageDialog(null, myRoom + " 채팅방에 입장했습니다.", "알림", JOptionPane.INFORMATION_MESSAGE);
         } else if (protocol.equals("quit")) {
             userVector.remove(secondParam);
             userList.setListData(userVector);
             doc.insertString(doc.getLength(), "[System] " + secondParam + "님이 나갔습니다.\n", left);
-
-//            chatTextPane.append("[System] " + secondParam + "님이 나갔습니다.\n");
         }
     }
 
@@ -318,6 +275,9 @@ public class ChatClient extends JFrame implements ChatClientInterface {
         sendBtn.addActionListener(new ActionListener() {
             @Override
             public void actionPerformed(ActionEvent e) {
+                if (inputTextField.getText().trim().length() > 0) {
+                    encryptSendMessage();
+                }
             }
         });
     }
@@ -337,9 +297,13 @@ public class ChatClient extends JFrame implements ChatClientInterface {
         noteBtn.addActionListener(new ActionListener() {
             @Override
             public void actionPerformed(ActionEvent e) {
-                if (inputTextField.getText().trim().length() > 0) {
-                    encryptSendMessage();
+                String user = (String) userList.getSelectedValue();
+                String note = JOptionPane.showInputDialog("보낼 메시지를 넣어주세요");
+
+                if (note != null) {
+                    sendMessage("note?" + user + "?" + note);
                 }
+                System.out.println("받는 사람: " + user + "? 보낼 내용: " + note);
             }
         });
     }
@@ -348,20 +312,20 @@ public class ChatClient extends JFrame implements ChatClientInterface {
         voiceBtn.addActionListener(new ActionListener() {
             @Override
             public void actionPerformed(ActionEvent e) {
-                System.out.println("start VoiceServer");
-                EventQueue.invokeLater(new Runnable() {
-                    public void run() {
-                        try {
-                            new VoiceClient();
-                        } catch (Exception e) {
-                            e.printStackTrace();
+                if (voiceBtn.getText().equals("Voice Chatting")) {
+                    EventQueue.invokeLater(new Runnable() {
+                        public void run() {
+                            try {
+                                new VoiceGui();
+                            } catch (Exception e) {
+                                e.printStackTrace();
+                            }
                         }
-                    }
-                });
+                    });
+                }
             }
         });
     }
-
 
     public void quit() {
         addWindowListener(new WindowAdapter() {
@@ -369,11 +333,7 @@ public class ChatClient extends JFrame implements ChatClientInterface {
             public void windowClosing(WindowEvent e) {
                 super.windowClosing(e);
                 sendMessage("quit?" + nickname);
-
             }
-
         });
     }
-
-
 }

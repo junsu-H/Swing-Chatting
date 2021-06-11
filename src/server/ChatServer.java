@@ -15,7 +15,7 @@ import java.security.NoSuchAlgorithmException;
 import java.util.StringTokenizer;
 import java.util.Vector;
 
-public class ChatServer  {
+public class ChatServer {
     /* HOST, IP */
     private String HOST = InetAddress.getLocalHost().getHostAddress();
     public int PORT = 9625;
@@ -42,7 +42,7 @@ public class ChatServer  {
     }
 
     // 클라이언트를 계속 받기 위한 쓰레드
-    public void clientAccept() throws IOException {
+    public void clientAccept() {
         new Thread() {
             @Override
             public void run() {
@@ -64,9 +64,6 @@ public class ChatServer  {
     }
 
     class UserInfo implements Runnable {
-//        private DataOutputStream dataOutputStream;
-//        private DataInputStream dataInputStream;
-
         private BufferedReader bufferedReader = null;
 
         private Socket socket;
@@ -82,7 +79,6 @@ public class ChatServer  {
             try {
                 while (true) {
                     // 클라이언트 메세지 받기
-//                    String clientMessage = dataInputStream.readUTF();
                     bufferedReader = new BufferedReader(new InputStreamReader(socket.getInputStream(), "UTF-8"));
 
                     String clientMessage = bufferedReader.readLine();
@@ -109,19 +105,11 @@ public class ChatServer  {
                 broadCast("newUser?" + nickname);
 
                 for (int i = 0; i < userVector.size(); i++) {
-                    UserInfo userInfo = (UserInfo) userVector.elementAt(i);
-                    sendMessage("newUser?" + userInfo.nickname);
+                    sendMessage("newUser?" + userVector.elementAt(i).nickname);
                 }
                 userVector.add(this);
-                broadCast("userListUpdate?null");
+                broadCast("userListUpdate?" + nickname);
 
-                sendMessage("roomListUpdate?null");
-
-                // 자신에게 기존 방 목록을 받아오는 부분
-                for (int i = 0; i < roomVector.size(); i++) {
-                    RoomInfo roomInfo = (RoomInfo) roomVector.elementAt(i);
-                    sendMessage("oldRoom?" + roomInfo.roomName);
-                }
             } catch (IOException e) {
                 try {
                     bufferedReader.close();
@@ -144,70 +132,29 @@ public class ChatServer  {
 
             if (protocol.equals("chatting")) {
                 String message = tokenizer.nextToken();
-
                 sendMessage("chattingSelf?" + nickname + "?" + message);
-
                 broadCast("chatting?" + nickname + "?" + message);
 
-                System.out.println("(Test) 2. Server의 broadCast encryptSendMessage: " + (message));
-//                for (int i = 0; i < roomVector.size(); i++) {
-//                    RoomInfo roomInfo = (RoomInfo) roomVector.elementAt(i);
-//                    sendMessage("chattingLeft?" + nickname + "?" + msg);
-//                    roomInfo.broadCastRoom("chattingRight?" + nickname + "?" + msg);
-//                    System.out.println("클라이언트로 보내는 메세지: chatting?" + nickname + "?" + msg);
-//                }
-            }
-            else if (protocol.equals("quit")) {
-                broadCast("quit?" + secondParam);
-            }
-            else if (protocol.equals("note")) {
-                tokenizer = new StringTokenizer(secondParam, "@");
+//                System.out.println("(Test) 2. Server의 broadCast encryptSendMessage: " + (message));
+
+            } else if (protocol.equals("note")) {
+                tokenizer = new StringTokenizer(secondParam, "?");
 
                 String user = tokenizer.nextToken();
                 String note = tokenizer.nextToken();
 
                 System.out.println("받는 사람: " + secondParam);
                 System.out.println("보낼 내용: " + note);
-                // 벡터에서 해당 사용자를 찾아서 전송
 
+                /* 벡터에서 해당 사용자를 찾아서 전송 */
                 for (int i = 0; i < userVector.size(); i++) {
-                    UserInfo userInfo = (UserInfo) userVector.elementAt(i);
+                    UserInfo userInfo = userVector.elementAt(i);
                     if (userInfo.nickname.equals(user)) {
-                        userInfo.sendMessage("note?" + nickname + "@" + note);
+                        userInfo.sendMessage("note?" + nickname + "?" + note);
                     }
                 }
-            } // if 끝
-            else if (protocol.equals("createRoom")) {
-                // 1. 현재 같은 방이 존재하는지 확인
-                for (int i = 0; i < roomVector.size(); i++) {
-                    RoomInfo roomInfo = (RoomInfo) roomVector.elementAt(i);
-
-                    if (roomInfo.roomName.equals(secondParam)) {
-                        sendMessage("createRoomFail?ok");
-                        roomCheck = false;
-                        break;
-                    }
-                } // for 끝
-
-                if (roomCheck) {
-                    RoomInfo roomInfo = new RoomInfo(secondParam, this);
-                    roomVector.add(roomInfo);
-                    sendMessage("createRoom?" + secondParam);
-                    broadCast("newRoom?" + secondParam);
-                }
-
-                roomCheck = true;
-
-            } else if (protocol.equals("joinRoom")) {
-                for (int i = 0; i < roomVector.size(); i++) {
-                    RoomInfo roomInfo = (RoomInfo) roomVector.elementAt(i);
-                    if (roomInfo.roomName.equals(secondParam)) {
-                        roomInfo.broadCastRoom("chattingLeft?system?[System] " + nickname + "님이 입장하셨습니다.");
-                        // 사용자 추가
-                        roomInfo.addUser(this);
-                        sendMessage("joinRoom?" + secondParam);
-                    }
-                }
+            } else if (protocol.equals("quit")) {
+                broadCast("quit?" + secondParam);
             }
         }
 
@@ -230,28 +177,6 @@ public class ChatServer  {
             }
 
         }
-    }
-
-    class RoomInfo {
-        private String roomName;
-        private Vector roomUserVector = new Vector();
-
-        public RoomInfo(String roomName, UserInfo userInfo) {
-            this.roomName = roomName;
-            this.roomUserVector.add(userInfo);
-        }
-
-        public void broadCastRoom(String message) {
-            for (int i = 0; i < roomUserVector.size(); i++) {
-                UserInfo userInfo = (UserInfo) roomUserVector.elementAt(i);
-                userInfo.sendMessage(message);
-            }
-        }
-
-        private void addUser(UserInfo userInfo) {
-            this.roomUserVector.add(userInfo);
-        }
-
     }
 
 }

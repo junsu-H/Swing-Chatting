@@ -15,12 +15,11 @@ public class VoiceServer {
     volatile static boolean running = true;
     private static final int PORT = 9725;
     ServerSocket serverSocket = null;
-    Socket clientSocket = null;
+    Socket socket = null;
 
-//    public static void main(String[] args) {
-//        new VoiceServer();
-//    }
-
+    public static void main(String[] args) {
+        new VoiceServer();
+    }
     public VoiceServer() {
         String HOST = "";
         try {
@@ -33,7 +32,7 @@ public class VoiceServer {
             serverSocket = new ServerSocket(PORT);
             System.out.println(HOST + ": " + PORT + " Ready");
             while (true) {
-                clientSocket = serverSocket.accept();
+                socket = serverSocket.accept();
                 System.out.println("-------------------start VoiceServer-------------------");
                 new Thread(new receiveVoiceThread()).start();
                 new Thread(new sendVoiceThread()).start();
@@ -53,7 +52,7 @@ public class VoiceServer {
      * ref: https://stackoverflow.com/tags/javasound/info
      */
     public static AudioFormat getAudioFormat() {
-        float sampleRate = 44100;
+        float sampleRate = 44100.0F;
         int sampleSizeInBits = 16;
         int channels = 2;
         boolean signed = true;
@@ -74,7 +73,7 @@ public class VoiceServer {
 
             InputStream inputStream;
             try {
-                inputStream = clientSocket.getInputStream();
+                inputStream = socket.getInputStream();
 
                 int eof = 0;
                 byte[] buffer = new byte[65536];
@@ -111,7 +110,7 @@ public class VoiceServer {
 
             OutputStream outputStream;
             try {
-                outputStream = clientSocket.getOutputStream();
+                outputStream = socket.getOutputStream();
 
                 TargetDataLine line;
                 AudioFormat format = getAudioFormat();
@@ -133,14 +132,11 @@ public class VoiceServer {
                 }
             } catch (IOException ex) {
                 System.out.println("send i/o:" + ex);
-                Logger.getLogger(VoiceServer.class.getName()).log(Level.SEVERE, null, ex);
+                System.out.println("But Still Run VoiceServer");
             } catch (LineUnavailableException ex) {
                 System.out.println("send i/o:" + ex);
-                Logger.getLogger(VoiceServer.class.getName()).log(Level.SEVERE, null, ex);
+                System.out.println("But Still Run VoiceServer");
             }
-
-
         }
     }
-
 }

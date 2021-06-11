@@ -16,7 +16,17 @@ import javax.sound.sampled.TargetDataLine;
 import static server.VoiceServer.getAudioFormat;
 
 public class VoiceClient {
-    Socket socket;
+    private String HOST = "localhost";
+    private static final int PORT = 9725;
+
+    private Socket socket;
+
+    public static Thread sendVoiceThread;
+    public static Thread receiveVoiceThread;
+
+    private static AudioFormat format;
+    private static boolean check = true;
+    private static TargetDataLine mic;
 
     public static void main(String[] args) {
         new VoiceClient();
@@ -24,38 +34,46 @@ public class VoiceClient {
 
     public VoiceClient() {
         try {
-            socket = new Socket("localhost", 9725);
+            socket = new Socket(HOST, PORT);
         } catch (IOException e) {
             e.printStackTrace();
         }
-        new Thread(new sendVoiceThread()).start();
-        new Thread(new receiveVoiceThread()).start();
+        sendVoiceThread = new Thread(new sendVoiceThread());
+        sendVoiceThread.start();
+
+        receiveVoiceThread = new Thread(new receiveVoiceThread());
+        receiveVoiceThread.start();
 
     }
+
     class sendVoiceThread implements Runnable {
         @Override
         public void run() {
 
             OutputStream outputStream;
+
             try {
                 outputStream = socket.getOutputStream();
+                if (check) {
+                    format = getAudioFormat();
+                    DataLine.Info info = new DataLine.Info(TargetDataLine.class, format);
 
-                TargetDataLine line;
-                AudioFormat format = getAudioFormat();
-                DataLine.Info info = new DataLine.Info(TargetDataLine.class, format);
-                if (!AudioSystem.isLineSupported(info)) {
-                    System.err.println("Your hardware is not supported");
-                    System.exit(1);
+                    if (!AudioSystem.isLineSupported(info)) {
+                        System.err.println("Your hardware is not supported");
+                        System.exit(1);
+                    }
+                    mic = (TargetDataLine) AudioSystem.getLine(info);
+                    check = false;
                 }
-                line = (TargetDataLine) AudioSystem.getLine(info);
-                line.open(format);
-                line.start();
+
+                mic.open(format);
+                mic.start();
                 System.out.println("Start Capturing...");
                 byte buffer[] = new byte[(int) format.getSampleRate() * format.getFrameSize()];
 
-                System.out.println("buffer length: " + buffer.length);
+//                System.out.println("buffer length: " + buffer.length);
                 while (true) {
-                    int count = line.read(buffer, 0, buffer.length);
+                    int count = mic.read(buffer, 0, buffer.length);
                     if (count > 0) {
                         outputStream.write(buffer, 0, count);
                     }
@@ -104,7 +122,5 @@ public class VoiceClient {
             }
         }
     }
-
-
 }
 	
