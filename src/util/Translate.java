@@ -11,7 +11,11 @@ import org.json.simple.parser.JSONParser;
 import org.json.simple.parser.ParseException;
 
 public class Translate {
-    public static String translate(String pmessage) throws ParseException {
+    public static void main(String[] args) throws ParseException {
+        Translate.translate("준수는 짱짱이다");
+    }
+
+    public static String translate(String pMessage) throws ParseException {
         /* 애플리케이션 클라이언트 아이디 값 */
         String clientId = "xIvNWA9wZAWV32E34ttK";
 
@@ -21,7 +25,7 @@ public class Translate {
         String text;
 
         try {
-            text = URLEncoder.encode(pmessage, "UTF-8");
+            text = URLEncoder.encode(pMessage, "UTF-8");
         } catch (UnsupportedEncodingException e) {
             throw new RuntimeException("인코딩 실패", e);
         }
@@ -29,6 +33,8 @@ public class Translate {
         requestHeaders.put("X-Naver-Client-Id", clientId);
         requestHeaders.put("X-Naver-Client-Secret", clientSecret);
         String responseBody = post(apiURL, requestHeaders, text);
+
+        System.out.println(responseBody);
 
         requestHeaders = new HashMap<>();
         requestHeaders.put("X-Naver-Client-Id", clientId);
@@ -41,9 +47,24 @@ public class Translate {
         return (String) result.get("translatedText");
     }
 
+    /* Ref: https://chung-develop.tistory.com/31 */
     private static String post(String apiUrl, Map<String, String> requestHeaders, String text) {
         HttpURLConnection con = connect(apiUrl);
-        String postParams = "source=ko&target=en&text=" + text;
+
+        String postParams = null;
+
+        for(int i = 0; i < text.length(); i++) {
+            int index = text.charAt(i);
+
+            if(index >= 65 && index <= 122) {
+                /* 영어를 한국어로 바꾸기 */
+                postParams ="source=en&target=ko&text=" + text;
+            } else {
+                /* 한국어를 영어로 바꾸기 */
+                postParams = "source=ko&target=en&text=" + text;
+            }
+        }
+
         try {
             con.setRequestMethod("POST");
             for (Map.Entry<String, String> header : requestHeaders.entrySet()) {
@@ -79,8 +100,7 @@ public class Translate {
     }
 
     private static String readBody(InputStream body) {
-        InputStreamReader streamReader = new InputStreamReader(body);
-        try (BufferedReader lineReader = new BufferedReader(streamReader)) {
+        try (BufferedReader lineReader = new BufferedReader(new InputStreamReader(body))) {
             StringBuilder responseBody = new StringBuilder();
             String line;
             while ((line = lineReader.readLine()) != null) {

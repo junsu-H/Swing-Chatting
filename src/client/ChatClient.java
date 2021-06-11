@@ -223,8 +223,7 @@ public class ChatClient extends JFrame implements ChatClientInterface {
             if (selfCheck) {
                 doc.setParagraphAttributes(doc.getLength(), 1, right, false);
                 doc.insertString(doc.getLength(), secondParam + ": " + decryptMessage + "\n", right);
-//                doc.insertString(doc.getLength(), "(Translate) " + secondParam + ": " + Translate.translate(decryptMessage) + "\n", right);
-
+                doc.insertString(doc.getLength(), "(Translate) " + secondParam + ": " + Translate.translate(decryptMessage) + "\n", right);
                 selfCheck = false;
             } else {
                 doc.setParagraphAttributes(doc.getLength(), 1, left, false);
@@ -235,9 +234,9 @@ public class ChatClient extends JFrame implements ChatClientInterface {
         }
 
         if (protocol.equals("newUser")) {
+            doc.setParagraphAttributes(doc.getLength(), 1, left, false);
             doc.insertString(doc.getLength(), "[System] " + userVector.get(userVector.size()-1) + "님이 입장하셨습니다.\n", left);
             userVector.add(secondParam.trim());
-            doc.setParagraphAttributes(doc.getLength(), 1, left, false);
 
 //            chatTextPane.append("[System] " + secondParam + "님이 입장하셨습니다.\n");
         } else if (protocol.equals("oldUser")) {
