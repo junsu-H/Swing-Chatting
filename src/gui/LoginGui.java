@@ -1,7 +1,6 @@
 package gui;
 
 import client.ChatClient;
-import client.StressClient;
 import interfaces.LoginInterface;
 import dao.UserDao;
 import models.User;

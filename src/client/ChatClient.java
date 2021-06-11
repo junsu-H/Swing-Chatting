@@ -9,6 +9,10 @@ import javax.crypto.IllegalBlockSizeException;
 import javax.crypto.NoSuchPaddingException;
 import javax.swing.*;
 import javax.swing.border.EmptyBorder;
+import javax.swing.text.BadLocationException;
+import javax.swing.text.SimpleAttributeSet;
+import javax.swing.text.StyleConstants;
+import javax.swing.text.StyledDocument;
 import java.awt.*;
 import java.awt.event.*;
 import java.io.*;
@@ -19,7 +23,7 @@ import java.security.NoSuchAlgorithmException;
 import java.util.StringTokenizer;
 import java.util.Vector;
 
-public class ChatClient extends JFrame{
+public class ChatClient extends JFrame {
     /* HOST, IP */
     private static final String HOST = "localhost";
     private static final int PORT = 9625;
@@ -37,8 +41,17 @@ public class ChatClient extends JFrame{
     private static final Font font = new Font("바탕", Font.PLAIN, 15);
 
     private JPanel pane;
-    private JTextArea chatTextArea = new JTextArea(10, 10);
-    private JScrollPane chatScroll = new JScrollPane(chatTextArea);
+
+    //    private JTextArea chatTextPane = new JTextArea(10, 10);
+    private JTextPane chatTextPane = new JTextPane();
+
+    SimpleAttributeSet left = new SimpleAttributeSet();
+
+    SimpleAttributeSet right = new SimpleAttributeSet();
+    StyledDocument doc = chatTextPane.getStyledDocument();
+
+
+    private JScrollPane chatScroll = new JScrollPane(chatTextPane);
     private JTextField inputTextField;
     private JList userList = new JList();
     private JList roomList = new JList();
@@ -51,6 +64,7 @@ public class ChatClient extends JFrame{
     private Vector userVector = new Vector();
     private Vector roomVector = new Vector();
     private StringTokenizer tokenizer;
+    private static boolean selfCheck = false;
 
 
     public static void main(String[] args) throws IOException {
@@ -74,7 +88,7 @@ public class ChatClient extends JFrame{
         /* 가로 600 세로 450 */
 
         chatScroll.setBounds(10, 10, 600, 450);
-        chatTextArea.setEnabled(false);
+        chatTextPane.setEnabled(false);
         pane.add(chatScroll);
 
         /* 좌측 하단 대화 입력창 */
@@ -191,34 +205,63 @@ public class ChatClient extends JFrame{
                     e.printStackTrace();
                 } catch (IllegalAccessException e) {
                     e.printStackTrace();
+                } catch (BadLocationException e) {
+                    e.printStackTrace();
                 }
             }
         }.start();
     }
 
     /* 서버가 보내는 메세지 받기 */
-    public void receiveMessage(String pMessage) throws ParseException, NoSuchAlgorithmException, InvalidAlgorithmParameterException, NoSuchPaddingException, IllegalBlockSizeException, BadPaddingException, InvalidKeyException, UnsupportedEncodingException, NoSuchFieldException, IllegalAccessException {
+    public void receiveMessage(String pMessage) throws ParseException, NoSuchAlgorithmException, InvalidAlgorithmParameterException, NoSuchPaddingException, IllegalBlockSizeException, BadPaddingException, InvalidKeyException, UnsupportedEncodingException, NoSuchFieldException, IllegalAccessException, BadLocationException {
+        StyleConstants.setAlignment(left, StyleConstants.ALIGN_LEFT);
+        StyleConstants.setForeground(left, Color.RED);
+
+        StyleConstants.setAlignment(right, StyleConstants.ALIGN_RIGHT);
+        StyleConstants.setForeground(right, Color.BLUE);
+
         tokenizer = new StringTokenizer(pMessage, "?");
 
         String protocol = tokenizer.nextToken();
         String secondParam = tokenizer.nextToken();
 
-        if (protocol.equals("newUser")) {
-            userVector.add(secondParam.trim());
-            chatTextArea.append("[System] " + secondParam + "님이 입장하셨습니다.\n");
-        } else if (protocol.equals("oldUser")) {
-            userVector.add(secondParam.trim());
-            chatTextArea.append("[System] " + secondParam + "님이 입장하셨습니다.\n");
-        } else if (protocol.equals("userListUpdate")) {
-            userList.setListData(userVector);
-        } else if (protocol.equals("chatting")) {
+        /* 내가 보낸 메세지는 우측에 가도록 */
+        if (protocol.equals("chattingSelf")) {
+            selfCheck = true;
+        }
+
+        if (protocol.equals("chatting")) {
             String message = tokenizer.nextToken();
             String decryptMessage = AES.decrypt(AES.ofb, AES.messageIv, message);
-//            System.out.println("(TEST) 4. append decryptMessage: "  + decryptMessage);
 
-            chatTextArea.append(secondParam + ": " + decryptMessage + "\n");
-            chatTextArea.append(secondParam + ": " + Translate.translate(decryptMessage) + "\n");
+            if (selfCheck) {
+                doc.setParagraphAttributes(doc.getLength(), 1, right, false);
+                doc.insertString(doc.getLength(), secondParam + ": " + decryptMessage + "\n", right);
+//                doc.insertString(doc.getLength(), "(Translate) " + secondParam + ": " + Translate.translate(decryptMessage) + "\n", right);
+
+                selfCheck = false;
+
+            } else {
+                doc.setParagraphAttributes(doc.getLength(), 1, left, false);
+                doc.insertString(doc.getLength(), secondParam + ": " + decryptMessage + "\n", left);
+                doc.insertString(doc.getLength(), "(Translate) " + secondParam + ": " + Translate.translate(decryptMessage) + "\n", left);
+
+            }
             chatScroll.getVerticalScrollBar().setValue(chatScroll.getVerticalScrollBar().getMaximum());
+        }
+
+        if (protocol.equals("newUser")) {
+            userVector.add(secondParam.trim());
+            doc.insertString(doc.getLength(), "[System] " + secondParam + "님이 입장하셨습니다.\n", left);
+            doc.setParagraphAttributes(doc.getLength(), 1, left, false);
+
+//            chatTextPane.append("[System] " + secondParam + "님이 입장하셨습니다.\n");
+        } else if (protocol.equals("oldUser")) {
+            userVector.add(secondParam.trim());
+
+//            chatTextPane.append("[System] " + secondParam + "님이 입장하셨습니다.\n");
+        } else if (protocol.equals("userListUpdate")) {
+            userList.setListData(userVector);
         } else if (protocol.equals("note")) {
             tokenizer = new StringTokenizer(secondParam, "@");
             String user = tokenizer.nextToken();
@@ -244,7 +287,9 @@ public class ChatClient extends JFrame{
         } else if (protocol.equals("quit")) {
             userVector.remove(secondParam);
             userList.setListData(userVector);
-            chatTextArea.append("[System] " + secondParam + "님이 나갔습니다.\n");
+            doc.insertString(doc.getLength(), "[System] " + secondParam + "님이 나갔습니다.\n", left);
+
+//            chatTextPane.append("[System] " + secondParam + "님이 나갔습니다.\n");
         }
     }
 
@@ -266,8 +311,8 @@ public class ChatClient extends JFrame{
             String encryptMessage = AES.encrypt(AES.ofb, AES.messageIv, inputTextField.getText().trim()).trim();
             sendMessage("chatting?" + myRoom + "?" + encryptMessage);
             inputTextField.setText(null);
+//            System.out.println("(Test) 1. Client의 encryptSendMessag()e: " + encryptMessage);
 
-            System.out.println("(Test) 1. Client의 encryptSendMessage: " + encryptMessage);
         } catch (NoSuchPaddingException noSuchPaddingException) {
             noSuchPaddingException.printStackTrace();
         } catch (NoSuchAlgorithmException noSuchAlgorithmException) {

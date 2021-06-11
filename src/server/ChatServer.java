@@ -1,9 +1,17 @@
 package server;
 
+import util.AES;
+
+import javax.crypto.BadPaddingException;
+import javax.crypto.IllegalBlockSizeException;
+import javax.crypto.NoSuchPaddingException;
 import java.io.*;
 import java.net.InetAddress;
 import java.net.ServerSocket;
 import java.net.Socket;
+import java.security.InvalidAlgorithmParameterException;
+import java.security.InvalidKeyException;
+import java.security.NoSuchAlgorithmException;
 import java.util.StringTokenizer;
 import java.util.Vector;
 
@@ -140,19 +148,23 @@ public class ChatServer  {
             System.out.println("프로토콜: " + protocol);
             System.out.println("메세지: " + secondParam);
 
-            if (protocol.equals("chatting")) {
-                String msg = tokenizer.nextToken();
-                broadCast("chatting?" + nickname + "?" + msg);
-                System.out.println("2. Server의 broadCast encryptSendMessage: " + msg);
 
-//                sendMessage("chatting/" + nickname + "/" + msg);
-                for (int i = 0; i < roomVector.size(); i++) {
-                    RoomInfo roomInfo = (RoomInfo) roomVector.elementAt(i);
-                    sendMessage("chatting?" + nickname + "?" + msg);
-                    roomInfo.broadCastRoom("chatting?" + nickname + "?" + msg);
-                    System.out.println("클라이언트로 보내는 메세지: chatting?" + nickname + "?" + msg);
-                }
-            } else if (protocol.equals("quit")) {
+            if (protocol.equals("chatting")) {
+                String message = tokenizer.nextToken();
+
+                sendMessage("chattingSelf?" + nickname + "?" + message);
+
+                broadCast("chatting?" + nickname + "?" + message);
+
+                System.out.println("(Test) 2. Server의 broadCast encryptSendMessage: " + (message));
+//                for (int i = 0; i < roomVector.size(); i++) {
+//                    RoomInfo roomInfo = (RoomInfo) roomVector.elementAt(i);
+//                    sendMessage("chattingLeft?" + nickname + "?" + msg);
+//                    roomInfo.broadCastRoom("chattingRight?" + nickname + "?" + msg);
+//                    System.out.println("클라이언트로 보내는 메세지: chatting?" + nickname + "?" + msg);
+//                }
+            }
+            else if (protocol.equals("quit")) {
                 broadCast("quit?" + secondParam);
             }
             else if (protocol.equals("note")) {
@@ -197,7 +209,7 @@ public class ChatServer  {
                 for (int i = 0; i < roomVector.size(); i++) {
                     RoomInfo roomInfo = (RoomInfo) roomVector.elementAt(i);
                     if (roomInfo.roomName.equals(secondParam)) {
-                        roomInfo.broadCastRoom("chatting?system?[System] " + nickname + "님이 입장하셨습니다.");
+                        roomInfo.broadCastRoom("chattingLeft?system?[System] " + nickname + "님이 입장하셨습니다.");
                         // 사용자 추가
                         roomInfo.addUser(this);
                         sendMessage("joinRoom?" + secondParam);
@@ -227,18 +239,6 @@ public class ChatServer  {
         }
     }
 
-//        /* 클라이언트로 데이터 보내기 */
-//        public void sendMessage(String message) {
-//            try {
-//                dataOutputStream.writeUTF(message);
-//                dataOutputStream.flush();
-//            } catch (IOException ioException) {
-//                ioException.printStackTrace();
-//            }
-//        }
-//
-//    }
-
     class RoomInfo {
         private String roomName;
         private Vector roomUserVector = new Vector();
@@ -261,16 +261,4 @@ public class ChatServer  {
 
     }
 
-    public String emoji(String message) {
-        /* 이모티콘 유니코드 정보
-         * https://apps.timwhitlock.info/emoji/tables/unicode
-         */
-        message = message.replace(":)", new String(Character.toChars(0x1F603)));
-        message = message.replace(":D", new String(Character.toChars(0x1F604)));
-        message = message.replace(">_<", new String(Character.toChars(0x1F606)));
-        message = message.replace(":(", new String(Character.toChars(0x1F61E)));
-        message = message.replace("(하트)", new String(Character.toChars(0x1F60D)));
-        message = message.replace("(메롱)", new String(Character.toChars(0x1F61D)));
-        return message;
-    }
 }
