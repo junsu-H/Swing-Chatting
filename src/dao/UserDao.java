@@ -8,7 +8,6 @@ import java.io.UnsupportedEncodingException;
 import java.security.InvalidAlgorithmParameterException;
 import java.security.InvalidKeyException;
 import java.security.NoSuchAlgorithmException;
-import java.security.SecureRandom;
 import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
@@ -16,7 +15,7 @@ import java.sql.SQLException;
 
 import static dao.DBConnection.close;
 
-public class UserDao implements UserInterface {
+public class UserDao {
     /* DB Connection Object */
     private Connection conn = null;
 
@@ -90,19 +89,13 @@ public class UserDao implements UserInterface {
             pstmt = conn.prepareStatement(insertSql);
             pstmt.setString(1, user.getEmail());
 
-            KeyGenerator keyGenerator = KeyGenerator.getInstance("AES");
-            SecureRandom secureRandom = new SecureRandom();
-            keyGenerator.init(128, secureRandom);
-
             String password = user.getPassword();
             String encrypted = AES.encrypt(AES.cbc, AES.dbIv, password);
             pstmt.setString(2, encrypted);
             pstmt.executeUpdate();
             return 1;
-        } catch (InvalidAlgorithmParameterException e) {
+        } catch (InvalidAlgorithmParameterException | SQLException e) {
             e.printStackTrace();
-        } catch (SQLException sqlException) {
-            sqlException.printStackTrace();
         } catch (NoSuchPaddingException e) {
             e.printStackTrace();
         } catch (IllegalBlockSizeException e) {
@@ -157,7 +150,5 @@ public class UserDao implements UserInterface {
             close(conn, pstmt, rs);
         }
         return -1;
-
     }
 }
-

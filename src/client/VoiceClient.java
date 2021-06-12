@@ -28,9 +28,6 @@ public class VoiceClient {
     private static boolean check = true;
     private static TargetDataLine mic;
 
-    public static void main(String[] args) {
-        new VoiceClient();
-    }
 
     public VoiceClient() {
         try {
@@ -38,15 +35,15 @@ public class VoiceClient {
         } catch (IOException e) {
             e.printStackTrace();
         }
-        sendVoiceThread = new Thread(new sendVoiceThread());
+        sendVoiceThread = new Thread(new SendVoiceThread());
         sendVoiceThread.start();
 
-        receiveVoiceThread = new Thread(new receiveVoiceThread());
+        receiveVoiceThread = new Thread(new ReceiveVoiceThread());
         receiveVoiceThread.start();
 
     }
 
-    class sendVoiceThread implements Runnable {
+    class SendVoiceThread implements Runnable {
         @Override
         public void run() {
 
@@ -71,7 +68,6 @@ public class VoiceClient {
                 System.out.println("Start Capturing...");
                 byte buffer[] = new byte[(int) format.getSampleRate() * format.getFrameSize()];
 
-//                System.out.println("buffer length: " + buffer.length);
                 while (true) {
                     int count = mic.read(buffer, 0, buffer.length);
                     if (count > 0) {
@@ -88,7 +84,7 @@ public class VoiceClient {
         }
     }
 
-    class receiveVoiceThread implements Runnable {
+    class ReceiveVoiceThread implements Runnable {
         @Override
         public void run() {
             AudioFormat format;
@@ -108,7 +104,7 @@ public class VoiceClient {
                 sourceDataLine.start();
                 while ((eof = inputStream.read(buffer, 0, buffer.length)) != -1) {
                     if (eof > 0) {
-                        System.out.println(eof + " ");
+//                        System.out.println(eof + " ");
                         sourceDataLine.write(buffer, 0, eof);
                         buffer = new byte[65536];
                     }

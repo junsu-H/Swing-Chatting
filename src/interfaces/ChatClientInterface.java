@@ -22,12 +22,12 @@ public interface ChatClientInterface {
     Font font = new Font("바탕", Font.PLAIN, 15);
 
     JPanel pane = new JPanel();
-
     JTextPane chatTextPane = new JTextPane();
 
     SimpleAttributeSet left = new SimpleAttributeSet();
     SimpleAttributeSet right = new SimpleAttributeSet();
     StyledDocument doc = chatTextPane.getStyledDocument();
+
     JScrollPane chatScroll = new JScrollPane(chatTextPane);
     JTextField inputTextField = new JTextField(20);
     DefaultListModel defaultListModel = new DefaultListModel();
@@ -44,4 +44,18 @@ public interface ChatClientInterface {
             InvalidKeyException, UnsupportedEncodingException,
             NoSuchFieldException, IllegalAccessException,
             BadLocationException;
+
+    void sendMessage(String message);
+
+    void sendEncryptMessage();
+
+    void clickSendBtn();
+
+    void enterInputTextField();
+
+    void clickNoteBtn();
+
+    void clickVoiceBtn();
+
+    void quit();
 }

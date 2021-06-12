@@ -1,6 +1,5 @@
 package client;
 
-import gui.LoginGui;
 import gui.VoiceGui;
 import interfaces.ChatClientInterface;
 import org.json.simple.parser.ParseException;
@@ -13,9 +12,7 @@ import javax.crypto.NoSuchPaddingException;
 import javax.swing.*;
 import javax.swing.border.EmptyBorder;
 import javax.swing.text.BadLocationException;
-import javax.swing.text.SimpleAttributeSet;
 import javax.swing.text.StyleConstants;
-import javax.swing.text.StyledDocument;
 import java.awt.*;
 import java.awt.event.*;
 import java.io.*;
@@ -34,16 +31,12 @@ public class ChatClient extends JFrame implements ChatClientInterface {
     private BufferedWriter bufferedWriter;
     private BufferedReader bufferedReader;
 
-    /* 현재 내 방 */
-    private String myRoom = "general";
+    /* 디폴트 방 */
+    private String defaultRoom = "general";
 
     private Vector userVector = new Vector();
     private StringTokenizer tokenizer;
     private static boolean selfCheck = false;
-
-    public static void main(String[] args) throws IOException, BadLocationException {
-        new ChatClient();
-    }
 
     public ChatClient() throws BadLocationException {
         inputDialogNickname();
@@ -99,7 +92,6 @@ public class ChatClient extends JFrame implements ChatClientInterface {
         quit();
     }
 
-
     public void inputDialogNickname() {
         do {
             nickname = JOptionPane.showInputDialog("2글자 이상 사용할 NICKNAME을 적어주세요.", "guest").trim();
@@ -113,11 +105,11 @@ public class ChatClient extends JFrame implements ChatClientInterface {
         } catch (Exception e) {
             System.out.println("new Socket Error");
         } finally {
-            connect();
+            communication();
         }
     }
 
-    public void connect() throws BadLocationException {
+    public void communication() throws BadLocationException {
         try {
             bufferedWriter = new BufferedWriter(new OutputStreamWriter(socket.getOutputStream(), "UTF-8"));
             bufferedReader = new BufferedReader(new InputStreamReader(socket.getInputStream(), "UTF-8"));
@@ -125,10 +117,13 @@ public class ChatClient extends JFrame implements ChatClientInterface {
             e.printStackTrace();
         }
 
-        /* nickname server로 전송 */
+        /* nickname을 server로 전송 */
         sendMessage(nickname);
+
+        /* 왼쪽 정렬 */
         doc.insertString(doc.getLength(), "[System] " + nickname + "님이 입장하셨습니다.\n", left);
-        /* userVector 추가 */
+
+        /* userVector에 들어온 user 추가 */
         userVector.add(nickname);
 
         new Thread() {
@@ -136,14 +131,14 @@ public class ChatClient extends JFrame implements ChatClientInterface {
             public void run() {
                 try {
                     while (true) {
-                        /* server가 보낸 메세지 받기 */
                         String message = null;
                         try {
+                            /* server가 보낸 메시지 받기 */
                             message = bufferedReader.readLine();
                         } catch (IOException e) {
                             e.printStackTrace();
                         }
-//                        System.out.println("3. receiveMessage: " + message);
+//                        System.out.println("(Test) 3. receiveMessage: " + message);
                         receiveMessage(message);
                     }
                 } catch (InvalidAlgorithmParameterException e) {
@@ -164,9 +159,9 @@ public class ChatClient extends JFrame implements ChatClientInterface {
                     e.printStackTrace();
                 } catch (NoSuchFieldException e) {
                     e.printStackTrace();
-                } catch (IllegalAccessException e) {
-                    e.printStackTrace();
                 } catch (BadLocationException e) {
+                    e.printStackTrace();
+                } catch (IllegalAccessException e) {
                     e.printStackTrace();
                 }
             }
@@ -232,6 +227,7 @@ public class ChatClient extends JFrame implements ChatClientInterface {
         }
     }
 
+    @Override
     public void sendMessage(String message) {
         try {
             /* 데이터 보내기 */
@@ -244,11 +240,12 @@ public class ChatClient extends JFrame implements ChatClientInterface {
         }
 
     }
-
-    private void encryptSendMessage() {
+    
+    @Override
+    public void sendEncryptMessage() {
         try {
             String encryptMessage = AES.encrypt(AES.ofb, AES.messageIv, inputTextField.getText().trim()).trim();
-            sendMessage("chatting?" + myRoom + "?" + encryptMessage);
+            sendMessage("chatting?" + defaultRoom + "?" + encryptMessage);
 
             System.out.println("Client의 plainText: " + inputTextField.getText().trim());
             inputTextField.setText(null);
@@ -271,29 +268,30 @@ public class ChatClient extends JFrame implements ChatClientInterface {
         }
     }
 
-    /* 1. Client -> Server Message */
+    @Override
     public void clickSendBtn() {
         sendBtn.addActionListener(new ActionListener() {
             @Override
             public void actionPerformed(ActionEvent e) {
                 if (inputTextField.getText().trim().length() > 0) {
-                    encryptSendMessage();
+                    sendEncryptMessage();
                 }
             }
         });
     }
 
-    /* 1. Client -> Server Message */
+    @Override
     public void enterInputTextField() {
         inputTextField.addActionListener(new ActionListener() {
             public void actionPerformed(ActionEvent e) {
                 if (inputTextField.getText().trim().length() > 0) {
-                    encryptSendMessage();
+                    sendEncryptMessage();
                 }
             }
         });
     }
 
+    @Override
     public void clickNoteBtn() {
         noteBtn.addActionListener(new ActionListener() {
             @Override
@@ -308,6 +306,7 @@ public class ChatClient extends JFrame implements ChatClientInterface {
         });
     }
 
+    @Override
     public void clickVoiceBtn() {
         voiceBtn.addActionListener(new ActionListener() {
             @Override
@@ -327,6 +326,7 @@ public class ChatClient extends JFrame implements ChatClientInterface {
         });
     }
 
+    @Override
     public void quit() {
         addWindowListener(new WindowAdapter() {
             @Override

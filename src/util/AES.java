@@ -16,7 +16,7 @@ public class AES implements AESInterface {
      * https://www.baeldung.com/java-aes-encryption-decryption
      */
 
-    public static String encrypt(String algorithm, String iv, String input) throws NoSuchPaddingException, NoSuchAlgorithmException,
+    public static String encrypt(String algorithm, String iv, String plainText) throws NoSuchPaddingException, NoSuchAlgorithmException,
             InvalidAlgorithmParameterException, InvalidKeyException,
             BadPaddingException, IllegalBlockSizeException, UnsupportedEncodingException {
 
@@ -26,7 +26,7 @@ public class AES implements AESInterface {
         IvParameterSpec ivParameterSpec = new IvParameterSpec(iv.getBytes());
 
         cipher.init(Cipher.ENCRYPT_MODE, keySpec, ivParameterSpec);
-        byte[] cipherText = cipher.doFinal(input.getBytes("UTF-8"));
+        byte[] cipherText = cipher.doFinal(plainText.getBytes("UTF-8"));
 
         return Base64.getEncoder()
                 .encodeToString(cipherText);
@@ -52,14 +52,15 @@ public class AES implements AESInterface {
 
     /* Test */
     static void givenStringWhenEncryptThenSuccess() throws InvalidAlgorithmParameterException, NoSuchPaddingException, IllegalBlockSizeException, UnsupportedEncodingException, NoSuchAlgorithmException, BadPaddingException, InvalidKeyException, NoSuchFieldException, IllegalAccessException {
-        String password = "junsu";
-        String cipherText = AES.encrypt(AES.cbc, dbIv, password);
+        String text = "junsu";
+        String cipherText = AES.encrypt(AES.cbc, dbIv, text);
         String plainText = AES.decrypt(AES.cbc, dbIv, cipherText);
-        if (password.equals(plainText)) {
-            System.out.println("DB 같다고 말해!");
+        if (text.equals(plainText)) {
+            System.out.println("DB야 같다고 말해!!!");
         }
     }
 
+    /* Test */
     public static void main(String[] args) throws InvalidAlgorithmParameterException, NoSuchPaddingException, IllegalBlockSizeException, UnsupportedEncodingException, NoSuchAlgorithmException, BadPaddingException, InvalidKeyException, NoSuchFieldException, IllegalAccessException {
         AES.givenStringWhenEncryptThenSuccess();
     }

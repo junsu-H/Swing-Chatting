@@ -11,10 +11,7 @@ import org.json.simple.parser.JSONParser;
 import org.json.simple.parser.ParseException;
 
 public class Translate {
-    public static void main(String[] args) throws ParseException {
-        Translate.translate("준수는 짱짱이다");
-    }
-
+    /* Ref: https://chung-develop.tistory.com/31 */
     public static String translate(String pMessage) throws ParseException {
         /* 애플리케이션 클라이언트 아이디 값 */
         String clientId = "xIvNWA9wZAWV32E34ttK";
@@ -34,8 +31,6 @@ public class Translate {
         requestHeaders.put("X-Naver-Client-Secret", clientSecret);
         String responseBody = post(apiURL, requestHeaders, text);
 
-        System.out.println(responseBody);
-
         requestHeaders = new HashMap<>();
         requestHeaders.put("X-Naver-Client-Id", clientId);
         requestHeaders.put("X-Naver-Client-Secret", clientSecret);
@@ -47,7 +42,6 @@ public class Translate {
         return (String) result.get("translatedText");
     }
 
-    /* Ref: https://chung-develop.tistory.com/31 */
     private static String post(String apiUrl, Map<String, String> requestHeaders, String text) {
         HttpURLConnection con = connect(apiUrl);
 

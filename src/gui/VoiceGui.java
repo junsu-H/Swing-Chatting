@@ -1,8 +1,6 @@
 package gui;
 
 import client.VoiceClient;
-import com.mysql.cj.xdevapi.Client;
-import server.VoiceServer;
 
 import javax.swing.*;
 import javax.swing.border.EmptyBorder;
@@ -12,9 +10,10 @@ import java.awt.event.ActionListener;
 
 public class VoiceGui extends JFrame {
 
-    private final JButton clientStartBtn = new JButton("Voice Client Start");
-    private final JButton clientStopBtn = new JButton("Voice Client Stop");
     public JPanel contentPane =  new JPanel();
+    public JButton clientStartBtn = new JButton("Voice Client Start");
+    public JButton clientStopBtn = new JButton("Voice Client Stop");
+
     public VoiceGui(){
         super("Voice");
         contentPane.setBorder(new EmptyBorder(5, 5, 5, 5));
@@ -71,9 +70,5 @@ public class VoiceGui extends JFrame {
                 });
             }
         });
-    }
-
-    public static void main(String[] args) {
-        new VoiceGui();
     }
 }

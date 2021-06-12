@@ -30,5 +30,4 @@ public class DBConnection {
             System.out.println("close(c, p, r) Error");
         }
     }
-
 }

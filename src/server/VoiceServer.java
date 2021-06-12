@@ -12,14 +12,10 @@ import java.util.logging.Level;
 import java.util.logging.Logger;
 
 public class VoiceServer {
-    volatile static boolean running = true;
     private static final int PORT = 9725;
     ServerSocket serverSocket = null;
     Socket socket = null;
 
-    public static void main(String[] args) {
-        new VoiceServer();
-    }
     public VoiceServer() {
         String HOST = "";
         try {
@@ -30,7 +26,7 @@ public class VoiceServer {
 
         try {
             serverSocket = new ServerSocket(PORT);
-            System.out.println(HOST + ": " + PORT + " Ready");
+            System.out.println("VoiceServer Ready");
             while (true) {
                 socket = serverSocket.accept();
                 System.out.println("-------------------start VoiceServer-------------------");
@@ -51,6 +47,7 @@ public class VoiceServer {
      * boolean bigEndian:빅엔디안여부
      * ref: https://stackoverflow.com/tags/javasound/info
      */
+
     public static AudioFormat getAudioFormat() {
         float sampleRate = 44100.0F;
         int sampleSizeInBits = 16;
@@ -89,7 +86,7 @@ public class VoiceServer {
                         break;
                     }
                     else if (eof > 0) {
-                        System.out.println(eof + " ");
+//                        System.out.println(eof + " ");
                         sourceDataLine.write(buffer, 0, eof);
                         buffer = new byte[65536];
                     }
@@ -124,7 +121,7 @@ public class VoiceServer {
                 line.start();
                 System.out.println("Start Capturing...");
                 byte buffer[] = new byte[(int) format.getSampleRate() * format.getFrameSize()];
-                while (running) {
+                while (true) {
                     int count = line.read(buffer, 0, buffer.length);
                     if (count > 0) {
                         outputStream.write(buffer, 0, count);
