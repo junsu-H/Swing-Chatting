@@ -15,9 +15,9 @@ create database chatting;
 ```
 create table `chatting`.`user`(
     id INT(11) AUTO_INCREMENT  NOT NULL,
-    email VARCHAR(30) NOT NULL,
+    email VARCHAR(30) NOT NULL ,
     password VARCHAR(100) NOT NULL,
-    nickname VARCHAR(10) NULL,
+    nickname VARCHAR(30) DEFAULT "GUEST",
     create_date  TIMESTAMP NOT NULL DEFAULT NOW(),
     PRIMARY KEY (id),
     UNIQUE KEY (email)
