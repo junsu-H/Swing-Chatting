@@ -188,7 +188,7 @@ public class ChatClient extends JFrame implements ChatClientInterface {
         String protocol = tokenizer.nextToken();
         String secondParam = tokenizer.nextToken();
 
-        /* 내가 보낸 메세지는 우측에 가도록 */
+        /* 내가 보낸 메시지는 우측에 가도록 */
         if (protocol.equals("chattingSelf")) {
             selfCheck = true;
         }

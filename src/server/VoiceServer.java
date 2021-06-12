@@ -30,8 +30,8 @@ public class VoiceServer {
             while (true) {
                 socket = serverSocket.accept();
                 System.out.println("-------------------start VoiceServer-------------------");
-                new Thread(new receiveVoiceThread()).start();
-                new Thread(new sendVoiceThread()).start();
+                new Thread(new ReceiveVoiceThread()).start();
+                new Thread(new SendVoiceThread()).start();
             }
         } catch (IOException e) {
             System.out.println("socket:" + e);
@@ -57,7 +57,7 @@ public class VoiceServer {
         return new AudioFormat(sampleRate, sampleSizeInBits, channels, signed, bigEndian);
     }
 
-    class receiveVoiceThread implements Runnable {
+    class ReceiveVoiceThread implements Runnable {
         @Override
         public void run() {
             AudioFormat format = null;
@@ -101,7 +101,7 @@ public class VoiceServer {
         }
     }
 
-    class sendVoiceThread implements Runnable {
+    class SendVoiceThread implements Runnable {
         @Override
         public void run() {
 
