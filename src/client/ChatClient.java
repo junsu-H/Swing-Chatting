@@ -200,7 +200,7 @@ public class ChatClient extends JFrame implements ChatClientInterface {
         if (protocol.equals("chatting")) {
             String message = tokenizer.nextToken();
             String decryptMessage = AES.decrypt(AES.ofb, AES.messageIv, message);
-
+            System.out.println("Client가 받은 decryptMessage: " + decryptMessage);
             if (selfCheck) {
                 doc.setParagraphAttributes(doc.getLength(), 1, right, false);
                 doc.insertString(doc.getLength(), secondParam + ": " + decryptMessage + "\n", right);
@@ -222,10 +222,10 @@ public class ChatClient extends JFrame implements ChatClientInterface {
             userList.setListData(userVector);
         } else if (protocol.equals("note")) {
             tokenizer = new StringTokenizer(secondParam, "?");
-            String user = tokenizer.nextToken();
             String note = tokenizer.nextToken();
-            System.out.println(user + "사용자로부터 온 쪽지 " + note);
-            JOptionPane.showMessageDialog(null, note, user + "님으로부터 온 쪽지", JOptionPane.CLOSED_OPTION);
+            System.out.println(secondParam + "사용자로부터 온 쪽지 " + note);
+            System.out.println("equals(note) 성공\n");
+            JOptionPane.showMessageDialog(null, note, secondParam + "님으로부터 온 쪽지", JOptionPane.CLOSED_OPTION);
         } else if (protocol.equals("quit")) {
             userVector.remove(secondParam);
             userList.setListData(userVector);
@@ -250,8 +250,10 @@ public class ChatClient extends JFrame implements ChatClientInterface {
         try {
             String encryptMessage = AES.encrypt(AES.ofb, AES.messageIv, inputTextField.getText().trim()).trim();
             sendMessage("chatting?" + myRoom + "?" + encryptMessage);
+
+            System.out.println("Client의 plainText: " + inputTextField.getText().trim());
             inputTextField.setText(null);
-//            System.out.println("(Test) 1. Client의 encryptSendMessag()e: " + encryptMessage);
+            System.out.println("Client의 encryptSendMessage: " + encryptMessage);
 
         } catch (NoSuchPaddingException noSuchPaddingException) {
             noSuchPaddingException.printStackTrace();
@@ -303,7 +305,6 @@ public class ChatClient extends JFrame implements ChatClientInterface {
                 if (note != null) {
                     sendMessage("note?" + user + "?" + note);
                 }
-                System.out.println("받는 사람: " + user + "? 보낼 내용: " + note);
             }
         });
     }

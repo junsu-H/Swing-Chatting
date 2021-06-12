@@ -140,7 +140,6 @@ public class ChatServer {
             } else if (protocol.equals("note")) {
                 tokenizer = new StringTokenizer(secondParam, "?");
 
-                String user = tokenizer.nextToken();
                 String note = tokenizer.nextToken();
 
                 System.out.println("받는 사람: " + secondParam);
@@ -149,7 +148,7 @@ public class ChatServer {
                 /* 벡터에서 해당 사용자를 찾아서 전송 */
                 for (int i = 0; i < userVector.size(); i++) {
                     UserInfo userInfo = userVector.elementAt(i);
-                    if (userInfo.nickname.equals(user)) {
+                    if (userInfo.nickname.equals(secondParam)) {
                         userInfo.sendMessage("note?" + nickname + "?" + note);
                     }
                 }
