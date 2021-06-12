@@ -128,7 +128,7 @@ public class ChatServer {
             String secondParam = tokenizer.nextToken();
 
             System.out.println("프로토콜: " + protocol);
-            System.out.println("메세지: " + secondParam);
+            System.out.println("secondParam: " + secondParam);
 
             if (protocol.equals("chatting")) {
                 String message = tokenizer.nextToken();
@@ -138,20 +138,20 @@ public class ChatServer {
 //                System.out.println("(Test) 2. Server의 broadCast encryptSendMessage: " + (message));
 
             } else if (protocol.equals("note")) {
-                tokenizer = new StringTokenizer(secondParam, "?");
 
                 String note = tokenizer.nextToken();
 
                 System.out.println("받는 사람: " + secondParam);
                 System.out.println("보낼 내용: " + note);
+                // 벡터에서 해당 사용자를 찾아서 전송
 
-                /* 벡터에서 해당 사용자를 찾아서 전송 */
                 for (int i = 0; i < userVector.size(); i++) {
-                    UserInfo userInfo = userVector.elementAt(i);
+                    UserInfo userInfo = (UserInfo) userVector.elementAt(i);
                     if (userInfo.nickname.equals(secondParam)) {
                         userInfo.sendMessage("note?" + nickname + "?" + note);
                     }
                 }
+
             } else if (protocol.equals("quit")) {
                 broadCast("quit?" + secondParam);
             }

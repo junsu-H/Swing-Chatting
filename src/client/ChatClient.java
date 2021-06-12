@@ -221,10 +221,9 @@ public class ChatClient extends JFrame implements ChatClientInterface {
         } else if (protocol.equals("userListUpdate")) {
             userList.setListData(userVector);
         } else if (protocol.equals("note")) {
-            tokenizer = new StringTokenizer(secondParam, "?");
             String note = tokenizer.nextToken();
+            System.out.println(secondParam + note + "test");
             System.out.println(secondParam + "사용자로부터 온 쪽지 " + note);
-            System.out.println("equals(note) 성공\n");
             JOptionPane.showMessageDialog(null, note, secondParam + "님으로부터 온 쪽지", JOptionPane.CLOSED_OPTION);
         } else if (protocol.equals("quit")) {
             userVector.remove(secondParam);
