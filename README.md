@@ -1,7 +1,7 @@
 # Swing-Chatting
 
 ## 1. 사용 프로그램
-- MySQL 8.0
+- MySQL Workbench 8.0 CE
 - IntelliJ IDEA
 - jdk 11
 
@@ -23,3 +23,7 @@ create table `chatting`.`user`(
     UNIQUE KEY (email)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 ```
+
+## 3. run
+- ChatServer
+- LoginGui
