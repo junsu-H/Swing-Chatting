@@ -2,7 +2,7 @@
 
 ## 1. 프로젝트 소개
 자바 소켓을 사용해 개발한 채팅 프로그램이다.
----
+
 
 ## 2. 프로젝트 기능
 - MySQL과 연동하여 회원가입 및 로그인
@@ -11,7 +11,7 @@
 - 보내는 사람 오른쪽 정렬, 받는 사람 왼쪽 정렬
 - 쪽지 기능 제공
 - 음성 채팅 제공
----
+
 
 ## 3. 사용 프로그램
 - JDK 11.0.9
@@ -20,7 +20,7 @@
 - 파파고 API
 - mysql-connector-java-8.0.25.jar
 - json-simple-1.1.1.jar
----
+
 
 ## 4. DDL
 
@@ -40,7 +40,7 @@ create table `chatting`.`user`(
     UNIQUE KEY (email)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 ```
----
+
 
 ## 5. 실행 방법
 ### 5-1. MySQL Workbench 8.0 CE 실행 후 root 로그인
